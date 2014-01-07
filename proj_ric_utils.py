@@ -14,7 +14,7 @@ def solve_stst_feedbacknthrough(fmat=None, mmat=None, jmat=None,
                                                    nwtn_upd_reltol=1e-8)):
     """solve for the stabilizing feedback gain and the feedthrough
 
-    for the lti case"""
+    for the linear time invariant case"""
 
     Z = proj_alg_ric_newtonadi(mmat=mmat, fmat=fmat, jmat=jmat,
                                bmat=bmat, wmat=cmat,
@@ -35,7 +35,7 @@ def solve_proj_lyap_stein(A=None, J=None, W=None, M=None,
                           adi_dict=dict(adi_max_steps=150,
                                         adi_newZ_reltol=1e-8)
                           ):
-    """ approximates X that solves the projected lyap equation
+    """ approximates the solution X to the projected lyap equation
 
         [A-UV].T*X*M + M.T*X*[A-UV] + J.T*Y*M + M.T*Y.T*J = -W*W.T
 
@@ -62,7 +62,7 @@ def solve_proj_lyap_stein(A=None, J=None, W=None, M=None,
     else:
         At, Mt = A.T, M.T
 
-    # ms = [-10.0, -8.0, -5.0, -3.0, -2.0, -1.0]
+    # TODO: compute optimal shifts
     ms = [-10.0, -5.0, -3.0, -1.0]
     NZ = W.shape[0]
 
