@@ -9,11 +9,43 @@ def app_prj_via_sadpnt(amat=None, jmat=None, rhsv=None,
                        transposedprj=False):
     """apply projection via solving a sadpnt problem
 
-    Pv = sadpointmat^-1 * amat * v
+    let
+    .. math:
 
-    P.T v = amat.T * sadpointmat^-T *  v
+        A = \\begin{bmatrix} M & J_1^T \\\\ J_2 & 0 \\end{bmatrix}
+
+    and let
+    .. math:
+
+        P = \\begin{bmatrix} I - \
+        M^{-1}J_1^T(J_1^TM^{-1}J_2)^{-1} \\end{bmatrix}
+
+    then :math:`Pv` can be obtained via
+    .. math:
+
+        A^{-1}\\begin{bmatrix} Pv \\\\ * \end{bmatrix} = \
+        \\begin{bmatrix} Mv \\\\ 0 \end{bmatrix}
+
+    and :math:`P^Tv` can be obtained via
+    .. math:
+
+        A^{-T}\\begin{bmatrix} M^{-T}P^Tv \\\\ * \end{bmatrix} = \
+        \\begin{bmatrix} v \\\\ 0 \end{bmatrix}
+
+    :param amat: left upper entry in the saddlepoint matrix
+    :param jmat: left lower entry
+    :param jmatT: right upper entry, defaults to `jmat.T`
+    :param rhsv: array to be projected
+    :param umat, vmat:
+        low rank factored contribution to `amat`, default to `None`
+    :param transposedprj:
+        whether to apply the transpose of the projection, defaults to `False`
+
+    :return:
+        projected `rhsv`
 
     """
+
     if jmatT is None:
         jmatT = jmat.T
     if jmat is None:
@@ -84,6 +116,15 @@ def apply_massinv(M, rhsa, output=None):
 
     to a rhs array
     TODO: check cases for CG, spsolve,
+
+    :param M: sparse spd matrix
+    :param rhsa: sparse or dense array the inverse of M is applied
+    :param output: set to 'sparse' if rhsa has many zero columns \
+            to get the output as a sparse matrix
+
+    :return:
+        the inverse of `M` applied to `rhsa`
+
     """
     if output == 'sparse':
         return spsla.spsolve(M, rhsa)

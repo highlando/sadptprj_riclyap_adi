@@ -235,7 +235,7 @@ def proj_alg_ric_newtonadi(mmat=None, fmat=None, jmat=None,
 
     M.T*X*F + F.T*X*M - M.T*X*B*B.T*X*M + J(Y) = -WW.T
 
-        JXM = 0 and M.TXJ.T = 0
+    JXM = 0 and M.TXJ.T = 0
 
     """
 
