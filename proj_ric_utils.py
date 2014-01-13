@@ -87,7 +87,10 @@ def solve_proj_lyap_stein(A=None, J=None, W=None, M=None,
         Zp = np.zeros(Z.shape)
         zcol = np.zeros(NZ + J.shape[0])
         for ccol in range(Z.shape[1]):
-            zcol[:NZ] = Z[:NZ, ccol]
+            if sps.isspmatrix(Z):
+                zcol[:NZ] = Z[:NZ, ccol].todense().flatten()
+            else:
+                zcol[:NZ] = Z[:NZ, ccol]
             Zp[:, ccol] = atmtlu(zcol)[:NZ]
 
         return Zp, atmtlu
@@ -244,6 +247,9 @@ def proj_alg_ric_newtonadi(mmat=None, fmat=None, jmat=None,
     else:
         mt, ft = mmat.T, fmat.T
         transposed = True
+
+    if sps.isspmatrix(wmat):
+        wmat = wmat.todense()
 
     znc = z0
     nwtn_stp, upd_fnorm = 0, 2
