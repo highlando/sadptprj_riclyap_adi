@@ -249,7 +249,7 @@ def proj_alg_ric_newtonadi(mmat=None, fmat=None, jmat=None,
         transposed = True
 
     if sps.isspmatrix(wmat):
-        wmat = wmat.todense()
+        wmat = np.array(wmat.todense())
 
     znc = z0
     nwtn_stp, upd_fnorm = 0, 2
@@ -302,6 +302,9 @@ def proj_alg_ric_newtonadi(mmat=None, fmat=None, jmat=None,
                 # print 'comp upd norms', upd_fnorm, upred_fnorm
                 # print vecn2+vecn1, znc.shape
                 upd_fnorm = np.sqrt(np.abs(upd_fnorm) / np.abs(nzn))
+
+            :return:
+                    
 
         nwtn_upd_fnorms.append(upd_fnorm)
 
