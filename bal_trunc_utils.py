@@ -52,7 +52,13 @@ def compare_freqresp(mmat=None, amat=None, jmat=None, bmat=None,
     cf. [HeiSS08, p. 1059] but with B_2 = 0
 
     """
-    # the low rank factors of the feedback gain
+    if ahat is None:
+        ahat = np.dot(tl.T, amat*tr)
+    if bhat is None:
+        bhat = tl.T*bmat
+    if chat is None:
+        chat = cmat*tr
+
     NV = amat.shape[0]
 
     imunit = 1j
@@ -65,9 +71,11 @@ def compare_freqresp(mmat=None, amat=None, jmat=None, bmat=None,
         sadib = lau.solve_sadpnt_smw(amat=omega*imunit*mmat-amat,
                                      jmat=jmat, rhsv=bmat)
         freqrel.append(np.linalg.norm(cmat*sadib[:NV, :]))
+        print freqrel[-1]
 
         aib = np.linalg.solve(omega*imunit - ahat, bhat)
         red_freqrel.append(np.linalg.norm(np.dot(chat, aib)))
+        print red_freqrel[-1]
 
     if plot:
         plt.plot(absci, freqrel, absci, red_freqrel)

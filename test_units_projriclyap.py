@@ -79,9 +79,9 @@ class TestProjLyap(unittest.TestCase):
 
         via ADI iteration"""
 
-        Z = pru.solve_proj_lyap_stein(A=self.F, M=self.M,
+        Z = pru.solve_proj_lyap_stein(amat=self.F, mmat=self.M,
                                       umat=self.U, vmat=self.V,
-                                      J=self.J, W=self.W,
+                                      jmat=self.J, wmat=self.W,
                                       adi_dict=self.nwtn_adi_dict)['zfac']
 
         MtXM = self.M.T * np.dot(Z, Z.T) * self.M
@@ -106,9 +106,9 @@ class TestProjLyap(unittest.TestCase):
 
         via ADI iteration"""
 
-        Z = pru.solve_proj_lyap_stein(A=self.F, M=self.M,
+        Z = pru.solve_proj_lyap_stein(amat=self.F, mmat=self.M,
                                       umat=self.Usp, vmat=self.V,
-                                      J=self.J, W=self.W,
+                                      jmat=self.J, wmat=self.W,
                                       adi_dict=self.nwtn_adi_dict)['zfac']
 
         MtXM = self.M.T * np.dot(Z, Z.T) * self.M
@@ -136,22 +136,22 @@ class TestProjLyap(unittest.TestCase):
         U = self.U
         V = self.V
 
-        Z = pru.solve_proj_lyap_stein(A=self.F, M=self.M,
+        Z = pru.solve_proj_lyap_stein(amat=self.F, mmat=self.M,
                                       umat=U, vmat=V,
-                                      J=self.J, W=self.W,
+                                      jmat=self.J, wmat=self.W,
                                       adi_dict=self.nwtn_adi_dict)['zfac']
 
-        Z2 = pru.solve_proj_lyap_stein(A=self.F - self.uvs, M=self.M,
-                                       J=self.J, W=self.W,
+        Z2 = pru.solve_proj_lyap_stein(amat=self.F - self.uvs, mmat=self.M,
+                                       jmat=self.J, wmat=self.W,
                                        adi_dict=self.nwtn_adi_dict)['zfac']
 
-        Z3 = pru.solve_proj_lyap_stein(A=self.F.T - self.uvs.T, M=self.M.T,
-                                       J=self.J, W=self.W,
+        Z3 = pru.solve_proj_lyap_stein(amat=self.F.T-self.uvs.T, mmat=self.M.T,
+                                       jmat=self.J, wmat=self.W,
                                        adi_dict=self.nwtn_adi_dict,
                                        transposed=True)['zfac']
 
-        Z4 = pru.solve_proj_lyap_stein(A=self.F.T, M=self.M.T,
-                                       J=self.J, W=self.W,
+        Z4 = pru.solve_proj_lyap_stein(amat=self.F.T, mmat=self.M.T,
+                                       jmat=self.J, wmat=self.W,
                                        umat=U, vmat=V,
                                        adi_dict=self.nwtn_adi_dict,
                                        transposed=True)['zfac']

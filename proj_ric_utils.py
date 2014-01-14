@@ -29,7 +29,7 @@ def solve_stst_feedbacknthrough(fmat=None, mmat=None, jmat=None,
     return Z, wft
 
 
-def solve_proj_lyap_stein(A=None, J=None, W=None, M=None,
+def solve_proj_lyap_stein(amat=None, jmat=None, wmat=None, mmat=None,
                           umat=None, vmat=None,
                           transposed=False,
                           adi_dict=dict(adi_max_steps=150,
@@ -58,34 +58,34 @@ def solve_proj_lyap_stein(A=None, J=None, W=None, M=None,
     """
 
     if transposed:
-        At, Mt = A, M
+        At, Mt = amat, mmat
     else:
-        At, Mt = A.T, M.T
+        At, Mt = amat.T, mmat.T
 
     # TODO: compute optimal shifts
     ms = [-10.0, -5.0, -3.0, -1.0]
-    NZ = W.shape[0]
+    NZ = wmat.shape[0]
 
-    def get_atmtlu(At, Mt, J, ms):
+    def get_atmtlu(At, Mt, jmat, ms):
         """compute the LU of the projection matrix
 
         """
-        NP = J.shape[0]
-        sysm = sps.vstack([sps.hstack([At + ms.conjugate() * Mt, -J.T]),
-                           sps.hstack([J, sps.csr_matrix((NP, NP))])],
+        NP = jmat.shape[0]
+        sysm = sps.vstack([sps.hstack([At + ms.conjugate() * Mt, -jmat.T]),
+                           sps.hstack([jmat, sps.csr_matrix((NP, NP))])],
                           format='csc')
         return spsla.factorized(sysm)
 
     def _app_projinvz(Z, At=None, Mt=None,
-                      J=None, ms=None, atmtlu=None):
+                      jmat=None, ms=None, atmtlu=None):
 
         if atmtlu is None:
-            atmtlu = get_atmtlu(At, Mt, J, ms)
+            atmtlu = get_atmtlu(At, Mt, jmat, ms)
 
         NZ = Z.shape[0]
 
         Zp = np.zeros(Z.shape)
-        zcol = np.zeros(NZ + J.shape[0])
+        zcol = np.zeros(NZ + jmat.shape[0])
         for ccol in range(Z.shape[1]):
             if sps.isspmatrix(Z):
                 zcol[:NZ] = Z[:NZ, ccol].todense().flatten()
@@ -101,19 +101,19 @@ def solve_proj_lyap_stein(A=None, J=None, W=None, M=None,
 
     atmtlulist = []
     for mu in ms:
-        atmtlumu = get_atmtlu(At, Mt, J, mu)
+        atmtlumu = get_atmtlu(At, Mt, jmat, mu)
         atmtlulist.append(atmtlumu)
 
     if umat is not None and vmat is not None:
         # preps to apply the smw formula
         # adding zeros to the coefficients to fit the
         # saddle point systems
-        vmate = np.hstack([vmat, np.zeros((vmat.shape[0], J.shape[0]))])
+        vmate = np.hstack([vmat, np.zeros((vmat.shape[0], jmat.shape[0]))])
         if sps.isspmatrix(umat):
-            umate = sps.vstack([umat, sps.csr_matrix((J.shape[0],
+            umate = sps.vstack([umat, sps.csr_matrix((jmat.shape[0],
                                                      umat.shape[1]))])
         else:
-            umate = np.vstack([umat, np.zeros((J.shape[0], umat.shape[1]))])
+            umate = np.vstack([umat, np.zeros((jmat.shape[0], umat.shape[1]))])
 
         stinvlist = []
         for ncurmu, mu in enumerate(ms):
@@ -122,7 +122,7 @@ def solve_proj_lyap_stein(A=None, J=None, W=None, M=None,
 
         #  Start the ADI iteration
 
-        We = np.vstack([W, np.zeros((J.shape[0], W.shape[1]))])
+        We = np.vstack([wmat, np.zeros((jmat.shape[0], wmat.shape[1]))])
 
         Z = lau.app_smw_inv(atmtlulist[0], umat=vmate.T, vmat=umate.T,
                             rhsa=np.sqrt(-2 * ms[0].real) * We,
@@ -136,7 +136,7 @@ def solve_proj_lyap_stein(A=None, J=None, W=None, M=None,
         while adi_step < adi_dict['adi_max_steps'] and \
                 rel_newZ_norm > adi_dict['adi_newZ_reltol']:
 
-            Ze = np.vstack([Mt*Z, np.zeros((J.shape[0], W.shape[1]))])
+            Ze = np.vstack([Mt*Z, np.zeros((jmat.shape[0], wmat.shape[1]))])
             Zi = lau.app_smw_inv(atmtlulist[muind], umat=vmate.T,
                                  vmat=umate.T, rhsa=Ze,
                                  Sinv=stinvlist[muind])[:NZ, :]
@@ -157,10 +157,10 @@ def solve_proj_lyap_stein(A=None, J=None, W=None, M=None,
 
             try:
                 if adi_dict['check_lyap_res'] and np.mod(adi_step, 10) == 0:
-                    sqrdprolyares = comp_proj_lyap_res_norm(Z, amat=A, mmat=M,
-                                                            wmat=W, jmat=J,
-                                                            umat=umat,
-                                                            vmat=vmat)
+                    sqrdprolyares = \
+                        comp_proj_lyap_res_norm(Z, amat=amat, mmat=mmat,
+                                                wmat=wmat, jmat=jmat,
+                                                umat=umat, vmat=vmat)
                     print 'adistep ', adi_step
                     print 'cur proj lyap res: ', np.sqrt(sqrdprolyares)
                     print 'rel Z norm: \n', rel_newZ_norm
@@ -178,7 +178,7 @@ def solve_proj_lyap_stein(A=None, J=None, W=None, M=None,
 
     else:
 
-        Z = _app_projinvz(np.sqrt(-2*ms[0].real)*W, J=J,
+        Z = _app_projinvz(np.sqrt(-2*ms[0].real)*wmat, jmat=jmat,
                           atmtlu=atmtlulist[0])[0]
 
         ufac = Z
@@ -188,7 +188,7 @@ def solve_proj_lyap_stein(A=None, J=None, W=None, M=None,
         while adi_step < adi_dict['adi_max_steps'] and \
                 rel_newZ_norm > adi_dict['adi_newZ_reltol']:
 
-            Zi = _app_projinvz(Mt*Z, J=J, atmtlu=atmtlulist[muind])[0]
+            Zi = _app_projinvz(Mt*Z, jmat=jmat, atmtlu=atmtlulist[muind])[0]
 
             Z = np.sqrt(ms[muind].real / ms[muind-1].real) *\
                 (Z - (ms[muind] + ms[muind-1].conjugate()) * Zi)
@@ -273,8 +273,8 @@ def proj_alg_ric_newtonadi(mmat=None, fmat=None, jmat=None,
         # to compute (A-UV).-T
         # for the factorization mTxg.T =  tb * mTxtb = U*V
 
-        znn = solve_proj_lyap_stein(A=ft, M=mt, J=jmat,
-                                    W=rhsadi,
+        znn = solve_proj_lyap_stein(amat=ft, mmat=mt, jmat=jmat,
+                                    wmat=rhsadi,
                                     umat=bmat, vmat=mtxbt,
                                     transposed=transposed,
                                     adi_dict=nwtn_adi_dict)['zfac']
@@ -302,9 +302,6 @@ def proj_alg_ric_newtonadi(mmat=None, fmat=None, jmat=None,
                 # print 'comp upd norms', upd_fnorm, upred_fnorm
                 # print vecn2+vecn1, znc.shape
                 upd_fnorm = np.sqrt(np.abs(upd_fnorm) / np.abs(nzn))
-
-            :return:
-                    
 
         nwtn_upd_fnorms.append(upd_fnorm)
 

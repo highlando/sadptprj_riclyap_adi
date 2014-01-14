@@ -237,7 +237,7 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
 def comp_sqfnrm_factrd_diff(zone, ztwo, ret_sing_norms=False):
     """compute the squared Frobenius norm of z1*z1.T - z2*z2.T
 
-    using the linearity traces and that tr.(z1.dot(z2)) = tr(z2.dot(z1))
+    using the linearity traces and that tr(z1.dot(z2)) = tr(z2.dot(z1))
     and that tr(z1.dot(z1.T)) is faster computed via (z1*z1.sum(-1)).sum()
     """
 
