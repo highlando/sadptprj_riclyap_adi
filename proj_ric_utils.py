@@ -34,8 +34,7 @@ def solve_proj_lyap_stein(amat=None, jmat=None, wmat=None, mmat=None,
                           transposed=False,
                           adi_dict=dict(adi_max_steps=150,
                                         adi_newZ_reltol=1e-8),
-                          nwtn_adi_dict=None
-                          ):
+                          nwtn_adi_dict=None, **kw):
     """ approximates the solution X to the projected lyap equation
 
         [A-UV].T*X*M + M.T*X*[A-UV] + J.T*Y*M + M.T*Y.T*J = -W*W.T
@@ -237,7 +236,8 @@ def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
                            nwtn_adi_dict=dict(adi_max_steps=150,
                                               adi_newZ_reltol=1e-5,
                                               nwtn_max_steps=14,
-                                              nwtn_upd_reltol=1e-8)):
+                                              nwtn_upd_reltol=1e-8),
+                           **kw):
     """ solve the projected algebraic ricc via newton adi
 
     M.T*X*A + A.T*X*M - M.T*X*B*B.T*X*M + J(Y) = -WW.T

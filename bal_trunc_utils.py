@@ -71,13 +71,16 @@ def compare_freqresp(mmat=None, amat=None, jmat=None, bmat=None,
         sadib = lau.solve_sadpnt_smw(amat=omega*imunit*mmat-amat,
                                      jmat=jmat, rhsv=bmat)
         freqrel.append(np.linalg.norm(cmat*sadib[:NV, :]))
-        print freqrel[-1]
+        # print freqrel[-1]
 
         aib = np.linalg.solve(omega*imunit - ahat, bhat)
         red_freqrel.append(np.linalg.norm(np.dot(chat, aib)))
-        print red_freqrel[-1]
+        # print red_freqrel[-1]
 
     if plot:
-        plt.plot(absci, freqrel, absci, red_freqrel)
-        plt.show()
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.plot(absci, freqrel, absci, red_freqrel)
+        plt.semilogx()
+        plt.show(block=False)
     return freqrel, red_freqrel, absci
