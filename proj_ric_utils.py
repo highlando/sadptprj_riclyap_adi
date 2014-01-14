@@ -5,7 +5,7 @@ import scipy.sparse.linalg as spsla
 import lin_alg_utils as lau
 
 
-def solve_stst_feedbacknthrough(fmat=None, mmat=None, jmat=None,
+def solve_stst_feedbacknthrough(amat=None, mmat=None, jmat=None,
                                 bmat=None, cmat=None,
                                 fv=None, fl=None, fg=None, fl2=None,
                                 nwtn_adi_dict=dict(adi_max_steps=150,
@@ -16,14 +16,14 @@ def solve_stst_feedbacknthrough(fmat=None, mmat=None, jmat=None,
 
     for the linear time invariant case"""
 
-    Z = proj_alg_ric_newtonadi(mmat=mmat, fmat=fmat, jmat=jmat,
+    Z = proj_alg_ric_newtonadi(mmat=mmat, amat=amat, jmat=jmat,
                                bmat=bmat, wmat=cmat,
                                nwtn_adi_dict=nwtn_adi_dict)
 
     mtxb = get_mTzzTtb(mmat.T, Z, bmat)
     mtxfv = get_mTzzTtb(mmat.T, Z, fv)
 
-    wft = lau.solve_sadpnt_smw(amat=-fmat.T, jmat=jmat, rhsv=fl-mtxfv,
+    wft = lau.solve_sadpnt_smw(amat=-amat.T, jmat=jmat, rhsv=fl-mtxfv,
                                umat=-mtxb, vmat=bmat.T)
 
     return Z, wft
@@ -33,7 +33,8 @@ def solve_proj_lyap_stein(amat=None, jmat=None, wmat=None, mmat=None,
                           umat=None, vmat=None,
                           transposed=False,
                           adi_dict=dict(adi_max_steps=150,
-                                        adi_newZ_reltol=1e-8)
+                                        adi_newZ_reltol=1e-8),
+                          nwtn_adi_dict=None
                           ):
     """ approximates the solution X to the projected lyap equation
 
@@ -56,6 +57,9 @@ def solve_proj_lyap_stein(amat=None, jmat=None, wmat=None, mmat=None,
 
     see numOptAff.pdf
     """
+    if nwtn_adi_dict is not None:
+        adi_dict = nwtn_adi_dict
+        # so we can pass the same dicts to lyap and ric solve
 
     if transposed:
         At, Mt = amat, mmat
@@ -227,7 +231,7 @@ def get_mTzzTtb(MT, Z, tB, output=None):
         return MT*(np.dot(Z, np.dot(Z.T, tB)))
 
 
-def proj_alg_ric_newtonadi(mmat=None, fmat=None, jmat=None,
+def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
                            bmat=None, wmat=None, z0=None,
                            transposed=False,
                            nwtn_adi_dict=dict(adi_max_steps=150,
@@ -236,16 +240,16 @@ def proj_alg_ric_newtonadi(mmat=None, fmat=None, jmat=None,
                                               nwtn_upd_reltol=1e-8)):
     """ solve the projected algebraic ricc via newton adi
 
-    M.T*X*F + F.T*X*M - M.T*X*B*B.T*X*M + J(Y) = -WW.T
+    M.T*X*A + A.T*X*M - M.T*X*B*B.T*X*M + J(Y) = -WW.T
 
     JXM = 0 and M.TXJ.T = 0
 
     """
 
     if transposed:
-        mt, ft = mmat, fmat
+        mt, at = mmat, amat
     else:
-        mt, ft = mmat.T, fmat.T
+        mt, at = mmat.T, amat.T
         transposed = True
 
     if sps.isspmatrix(wmat):
@@ -273,7 +277,7 @@ def proj_alg_ric_newtonadi(mmat=None, fmat=None, jmat=None,
         # to compute (A-UV).-T
         # for the factorization mTxg.T =  tb * mTxtb = U*V
 
-        znn = solve_proj_lyap_stein(amat=ft, mmat=mt, jmat=jmat,
+        znn = solve_proj_lyap_stein(amat=at, mmat=mt, jmat=jmat,
                                     wmat=rhsadi,
                                     umat=bmat, vmat=mtxbt,
                                     transposed=transposed,
