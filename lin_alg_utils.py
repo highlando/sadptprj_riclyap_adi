@@ -158,13 +158,15 @@ def apply_invsqrt_fromleft(M, rhsa, output=None):
 def get_Sinv_smw(amat_lu, umat=None, vmat=None):
     """ compute (the small) inverse of I-V*Ainv*U
     """
-    aiu = np.zeros(umat.shape)
+    # aiu = np.zeros(umat.shape)
 
+    aiul = []  # to allow for complex values
     for ccol in range(umat.shape[1]):
         try:
-            aiu[:, ccol] = amat_lu(umat[:, ccol])
+            aiul.append(amat_lu(umat[:, ccol]))
         except TypeError:
-            aiu[:, ccol] = spsla.spsolve(amat_lu, umat[:, ccol])
+            aiul.append(spsla.spsolve(amat_lu, umat[:, ccol]))
+    aiu = np.asarray(aiul).T
 
     if sps.isspmatrix(vmat):
         return np.linalg.inv(np.eye(umat.shape[1]) - vmat * aiu)
@@ -178,11 +180,16 @@ def app_luinv_to_spmat(alu_solve, Z):
     and with a solve routine"""
 
     Z.tocsc()
-    ainvz = np.zeros(Z.shape)
+    # ainvz = np.zeros(Z.shape)
+    ainvzl = []  # to allow for complex values
     for ccol in range(Z.shape[1]):
-        ainvz[:, ccol] = alu_solve(Z[:, ccol].toarray().flatten())
+        try:
+            ainvzl.append(alu_solve(Z[:, ccol].toarray().flatten()))
+        except TypeError:
+            ainvzl.append(alu_solve(Z[:, ccol].toarray().flatten().real) +
+                          1j*alu_solve(Z[:, ccol].toarray().flatten().imag))
 
-    return ainvz
+    return np.asarray(ainvzl).T
 
 
 def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
@@ -203,7 +210,8 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
     else:
         alu = amat
 
-    auvirhs = np.zeros(rhsa.shape)
+    # auvirhs = np.zeros(rhsa.shape)
+    auvirhs = []
     for rhscol in range(rhsa.shape[1]):
         crhs = rhsa[:, rhscol]
         # branch with u and v present
@@ -224,14 +232,16 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
                 crhs = crhs + np.dot(umat, np.dot(Sinv, np.dot(vmat, aicrhs)))
 
         try:
-            auvirhs[:, rhscol] = alu(crhs)
+            # auvirhs[:, rhscol] = alu(crhs)
+            auvirhs.append(alu(crhs))
         except TypeError:
-            auvirhs[:, rhscol] = spsla.spsolve(alu, crhs)
+            # auvirhs[:, rhscol] = spsla.spsolve(alu, crhs)
+            auvirhs.append(spsla.spsolve(alu, crhs))
 
     if return_alu:
-        return auvirhs, alu
+        return np.asarray(auvirhs).T, alu
     else:
-        return auvirhs
+        return np.asarray(auvirhs).T
 
 
 def comp_sqfnrm_factrd_diff(zone, ztwo, ret_sing_norms=False):

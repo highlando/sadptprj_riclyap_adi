@@ -21,6 +21,7 @@ class TestLinalgUtils(unittest.TestCase):
         self.Vsp = sps.rand(self.k, self.n)
         self.J = sps.rand(self.k, self.n)
         self.Jt = sps.rand(self.n, self.k)
+        self.M = sps.eye(self.n)
 
     def test_smw_formula(self):
         """check the use of the smw formula
@@ -40,6 +41,25 @@ class TestLinalgUtils(unittest.TestCase):
                                   rhsa=self.Z, Sinv=None)
         AAinvZ = self.A * AuvInvZ - np.dot(self.U,
                                            np.dot(self.V, AuvInvZ))
+        self.assertTrue(np.allclose(AAinvZ, self.Z))
+
+    def test_smw_formula_complex(self):
+        """check the use of the smw formula
+
+        for the inverse of A-UV"""
+
+        # check the branch with direct solves
+        apoi = self.A + 1j * self.M
+        AuvInvZ = lau.app_smw_inv(apoi, umat=self.U, vmat=self.V,
+                                  rhsa=self.Z, Sinv=None)
+        AAinvZ = apoi * AuvInvZ - np.dot(self.U, np.dot(self.V, AuvInvZ))
+        self.assertTrue(np.allclose(AAinvZ, self.Z))
+
+        # check the branch where A comes as LU
+        alusolve = spsla.factorized(apoi)
+        AuvInvZ = lau.app_smw_inv(alusolve, umat=self.U, vmat=self.V,
+                                  rhsa=self.Z, Sinv=None)
+        AAinvZ = apoi * AuvInvZ - np.dot(self.U, np.dot(self.V, AuvInvZ))
         self.assertTrue(np.allclose(AAinvZ, self.Z))
 
     def test_smw_formula_spv(self):
@@ -71,6 +91,17 @@ class TestLinalgUtils(unittest.TestCase):
         AinvZ = lau.app_luinv_to_spmat(alusolve, Z)
 
         self.assertTrue(np.allclose(self.U, self.A * AinvZ))
+
+    def test_luinv_to_spmat_complex(self):
+        """check the application of the inverse
+
+        of a lu-factored matrix to a sparse mat"""
+
+        alusolve = spsla.factorized(self.A)
+        Z = sps.csr_matrix(self.U+1j*self.V.T)
+        AinvZ = lau.app_luinv_to_spmat(alusolve, Z)
+
+        self.assertTrue(np.allclose(Z.todense(), self.A * AinvZ))
 
     def test_solve_proj_sadpnt_smw(self):
         """check the sadpnt solver"""
@@ -108,16 +139,17 @@ class TestLinalgUtils(unittest.TestCase):
         auvAUVinv = self.A * AuvInvZ[:n, :] - \
             lau.comp_uvz_spdns(self.U, self.V, AuvInvZ[:n, :])
 
-        AuvInv2Z = lau.solve_sadpnt_smw(amat=self.A, jmat=self.J, rhsv=auvAUVinv,
+        AuvInv2Z = lau.solve_sadpnt_smw(amat=self.A, jmat=self.J,
+                                        rhsv=auvAUVinv,
                                         jmatT=self.Jt,
                                         umat=self.U, vmat=self.V)
 
         self.assertTrue(np.allclose(AuvInvZ[:n, :], AuvInv2Z[:n, :]),
                         msg='likely to fail because of ill cond')
 
-        prjz = lau.app_prj_via_sadpnt(amat=self.A, jmat=self.J, 
+        prjz = lau.app_prj_via_sadpnt(amat=self.A, jmat=self.J,
                                       rhsv=self.Z, jmatT=self.Jt)
-        prprjz = lau.app_prj_via_sadpnt(amat=self.A, jmat=self.J,   
+        prprjz = lau.app_prj_via_sadpnt(amat=self.A, jmat=self.J,
                                         rhsv=self.Z, jmatT=self.Jt)
 
         # check projector
@@ -130,15 +162,14 @@ class TestLinalgUtils(unittest.TestCase):
 
         # check transpose
         idmat = np.eye(n)
-        prj = lau.app_prj_via_sadpnt(amat=self.A, jmat=self.J, 
+        prj = lau.app_prj_via_sadpnt(amat=self.A, jmat=self.J,
                                      rhsv=idmat, jmatT=self.Jt)
 
-        prjT = lau.app_prj_via_sadpnt(amat=self.A, jmat=self.J, 
+        prjT = lau.app_prj_via_sadpnt(amat=self.A, jmat=self.J,
                                       rhsv=idmat, jmatT=self.Jt,
                                       transposedprj=True)
 
         self.assertTrue(np.allclose(prj, prjT.T))
-
 
     def test_comp_frobnorm_factored_difference(self):
         """check the computation of the frobenius norm
