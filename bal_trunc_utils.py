@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 import sadptprj_riclyap_adi.lin_alg_utils as lau
 
 
-def compute_lrbt_transfos(zfc=None, zfo=None, mmat=None, trunck=None):
+def compute_lrbt_transfos(zfc=None, zfo=None, mmat=None,
+                          trunck=dict(threshh=1e-2)):
     """
     the transformation matrices for the BT MOR
 
@@ -28,9 +29,8 @@ def compute_lrbt_transfos(zfc=None, zfo=None, mmat=None, trunck=None):
 
     lsv_mat, sv, rsv_matt = np.linalg.svd(np.dot(zfc.T, mmat*zfo))
 
-    if trunck is None:
-        k = np.where(sv > 1e-14)[0].size
-        lsvk, rsvk, svk = lsv_mat[:, :k], rsv_matt.T[:, :k], sv[:k]
+    k = np.where(sv > trunck['threshh'])[0].size
+    lsvk, rsvk, svk = lsv_mat[:, :k], rsv_matt.T[:, :k], sv[:k]
 
     svsqri = 1./np.sqrt(svk)
 
@@ -59,7 +59,7 @@ def compare_freqresp(mmat=None, amat=None, jmat=None, bmat=None,
     if chat is None:
         chat = cmat*tr
 
-    NV = amat.shape[0]
+    NV, red_nv = amat.shape[0], ahat.shape[0]
 
     imunit = 1j
 
@@ -73,14 +73,18 @@ def compare_freqresp(mmat=None, amat=None, jmat=None, bmat=None,
         freqrel.append(np.linalg.norm(cmat*sadib[:NV, :]))
         # print freqrel[-1]
 
-        aib = np.linalg.solve(omega*imunit - ahat, bhat)
+        aib = np.linalg.solve(omega*imunit*np.eye(red_nv) - ahat, bhat)
         red_freqrel.append(np.linalg.norm(np.dot(chat, aib)))
         # print red_freqrel[-1]
 
     if plot:
+        legstr = ['NV was {0}'.format(mmat.shape[0]),
+                  'nv is {0}'.format(tr.shape[1])]
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.plot(absci, freqrel, absci, red_freqrel)
+        plt.legend(legstr, loc=3)
         plt.semilogx()
+        plt.semilogy()
         plt.show(block=False)
     return freqrel, red_freqrel, absci
