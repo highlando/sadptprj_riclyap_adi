@@ -6,7 +6,7 @@ import sadptprj_riclyap_adi.lin_alg_utils as lau
 
 
 def compute_lrbt_transfos(zfc=None, zfo=None, mmat=None,
-                          trunck=dict(threshh=1e-2)):
+                          trunck=dict(threshh=1e-6)):
     """
     the transformation matrices for the BT MOR
 
