@@ -166,14 +166,14 @@ class TestProjLyap(unittest.TestCase):
         """check the sol of the projected alg. Riccati Eqn
 
         via Newton ADI"""
-        Z = pru.proj_alg_ric_newtonadi(mmat=self.M, fmat=self.F,
+        Z = pru.proj_alg_ric_newtonadi(mmat=self.M, amat=self.F,
                                        jmat=self.J, bmat=self.bmat,
                                        wmat=self.W, z0=self.bmat,
                                        nwtn_adi_dict=
                                        self.nwtn_adi_dict)['zfac']
 
         # for '0' initial value --> z0 = None
-        Z0 = pru.proj_alg_ric_newtonadi(mmat=self.M, fmat=self.F,
+        Z0 = pru.proj_alg_ric_newtonadi(mmat=self.M, amat=self.F,
                                         jmat=self.J, bmat=self.bmat,
                                         wmat=self.W,
                                         nwtn_adi_dict=
@@ -206,7 +206,7 @@ class TestProjLyap(unittest.TestCase):
 
     # @unittest.skip('mvd to test_units_compfacres_compress ')
     def test_compress_algric_Z(self):
-        Z = pru.proj_alg_ric_newtonadi(mmat=self.M, fmat=self.F,
+        Z = pru.proj_alg_ric_newtonadi(mmat=self.M, amat=self.F,
                                        jmat=self.J, bmat=self.bmat,
                                        wmat=self.W, z0=self.bmat,
                                        nwtn_adi_dict=
