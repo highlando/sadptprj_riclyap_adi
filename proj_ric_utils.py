@@ -66,7 +66,7 @@ def solve_proj_lyap_stein(amat=None, jmat=None, wmat=None, mmat=None,
         At, Mt = amat.T, mmat.T
 
     # TODO: compute optimal shifts
-    ms = [-10.0, -5.0, -3.0, -1.0]
+    ms = [-30.0, -20.0, -10.0, -5.0, -3.0, -1.0]
     NZ = wmat.shape[0]
 
     def get_atmtlu(At, Mt, jmat, ms):
