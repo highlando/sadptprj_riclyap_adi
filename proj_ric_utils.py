@@ -358,12 +358,10 @@ def comp_proj_lyap_res_norm(Z, amat=None, mmat=None, wmat=None,
     return lau.comp_sqfnrm_factrd_lyap_res(PtMtZ, PtFtZ, PtW)
 
 
-def compress_Zsvd(Z, k=None, thresh=None, shplot=False):
+def compress_Zsvd(Z, k=None, thresh=None, shplot=False, verbose=True):
     """routine that compresses the columns Z by means of a truncated SVD
 
     such that it ZZ.T is still well approximated"""
-    # if Z.shape[1] >= Z.shape[0]:
-    #     raise Warning('TODO: catch cases where Z has more cols than rows')
 
     nny = Z.shape[1]
     U, s, V = np.linalg.svd(Z, full_matrices=False)
@@ -381,10 +379,18 @@ def compress_Zsvd(Z, k=None, thresh=None, shplot=False):
 
     S = sps.dia_matrix((s[:k], 0), (k, k)).tocsr()
 
-    # svred = S[:k, :][:, :k]
-
-    # return np.dot(U[:, :k], svred)
-    return U[:, :k] * S
+    if verbose:
+        Zc = U[:, :k] * S
+        # monitor the compression
+        vec = np.random.randn(Z.shape[0], 1)
+        print 'dims of Z and Z_rd: ', Z.shape, Zc.shape
+        print '||(ZZ_rd - ZZ )*tstvec|| / ||ZZ_rd*tstvec|| = {0}'.\
+            format(np.linalg.norm(np.dot(Z, np.dot(Z.T, vec)) -
+                   np.dot(Zc, np.dot(Zc.T, vec))) /
+                   np.linalg.norm(np.dot(Z, np.dot(Z.T, vec))))
+        return Zc
+    else:
+        return U[:, :k] * S
 
 
 def compress_ZQR(Z, kmax=None, shplot=False):

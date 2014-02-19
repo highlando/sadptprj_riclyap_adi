@@ -127,7 +127,13 @@ def apply_massinv(M, rhsa, output=None):
 
     """
     if output == 'sparse':
-        return spsla.spsolve(M, rhsa)
+        colinds = rhsa.tocsr().indices
+        colinds = np.unique(colinds)
+        rhsa_cpy = rhsa.tolil()
+        for col in colinds:
+            rhsa_cpy[:, col] = np.atleast_2d(spsla.spsolve(M,
+                                             rhsa_cpy[:, col])).T
+        return rhsa_cpy
 
     else:
         mlusolve = spsla.factorized(M.tocsc())
