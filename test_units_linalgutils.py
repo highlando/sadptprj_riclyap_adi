@@ -22,6 +22,15 @@ class TestLinalgUtils(unittest.TestCase):
         self.J = sps.rand(self.k, self.n)
         self.Jt = sps.rand(self.n, self.k)
         self.M = sps.eye(self.n)
+        self.Aspd = self.A + self.A.T
+
+    def test_app_massinv(self):
+        """check in particular the sparse branch
+
+        """
+        aijt = lau.apply_massinv(self.Aspd, self.Jt, output='sparse')
+        testv = np.random.randn(self.k, 1)
+        self.assertTrue(np.allclose(self.Jt*testv, self.Aspd*(aijt*testv)))
 
     def test_smw_formula(self):
         """check the use of the smw formula
