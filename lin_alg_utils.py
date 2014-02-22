@@ -33,7 +33,7 @@ def app_prj_via_sadpnt(amat=None, jmat=None, rhsv=None,
     .. math::
 
         A^{-T}\\begin{bmatrix} M^{-T}P^Tv \\\\ * \end{bmatrix} = \
-        \\begin{bmatrix} v \\\\ 0 \end{bmatrix}
+        \\begin{bmatrix} v \\\\ 0 \end{bmatrix}.
 
     Parameters
     ----------
@@ -114,6 +114,7 @@ def solve_sadpnt_smw(amat=None, jmat=None, rhsv=None,
         projected `rhsv`
     , : f(v) callable, optional
         lu decomposition of the saddlepoint matrix
+
     """
 
     nnpp = jmat.shape[0]
@@ -152,20 +153,29 @@ def solve_sadpnt_smw(amat=None, jmat=None, rhsv=None,
 
 
 def apply_massinv(M, rhsa, output=None):
-    """ inverse of mass or any other spd matrix applied
+    """ Apply the inverse of mass or any other spd matrix
 
     to a rhs array
-    TODO: check cases for CG, spsolve,
+    TODO: by now just a wrapper for spsla.spsolve
+    change e.g. to CG
 
-    :param M: sparse spd matrix
-    :param rhsa: sparse or dense array the inverse of M is applied
-    :param output: set to 'sparse' if rhsa has many zero columns \
-            to get the output as a sparse matrix
+    Parameters
+    ----------
+    M : (N,N) sparse matrix
+        symmetric strictly positive definite
+    rhsa : (N,K) ndarray array or sparse matrix
+        array the inverse of M is to be applied to
+    output : string, optional
+        set to 'sparse' if rhsa has many zero columns
+        to get the output as a sparse matrix
 
-    :return:
+    Returns
+    -------
+    , : (N,K) ndarray or sparse matrix
         the inverse of `M` applied to `rhsa`
 
     """
+
     if output == 'sparse':
         colinds = rhsa.tocsr().indices
         colinds = np.unique(colinds)
@@ -192,6 +202,22 @@ def apply_invsqrt_fromleft(M, rhsa, output=None):
     """apply the sqrt of the inverse of a mass matrix or other spd
 
     TODO: cases for dense and sparse INPUTS
+
+    Parameters
+    ----------
+    M : (N,N) sparse matrix
+        symmetric strictly positive definite
+    rhsa : (K,N) ndarray array or sparse matrix
+        array the inverse of M is to be applied to
+    output : string, optional
+        set to 'sparse' if rhsa has many zero rows
+        to get the output as a sparse matrix
+
+    Returns
+    -------
+    , : (N,K) ndarray or sparse matrix
+        the sqrt of the inverse of `M` applied to `rhsa` from the left
+
     """
     Z = scipy.linalg.cholesky(M.todense())
     # R = Z.T*Z  <-> R^-1 = Z^-1*Z.-T
@@ -202,7 +228,22 @@ def apply_invsqrt_fromleft(M, rhsa, output=None):
 
 
 def get_Sinv_smw(amat_lu, umat=None, vmat=None):
-    """ compute (the small) inverse of I-V*Ainv*U
+    """ compute inverse of I-V*Ainv*U as it is needed for
+
+    the application of the Sherman-Morrison-Woodbury formula
+
+    Parameters
+    ----------
+    amat_lu : callable f(v) or (N,N) sparse matrix
+        the main part of the matrix `A-UV` possibly lu-factored
+    umat, vmat : (N,L), (L,N) ndarrays or sparse matrices
+        factored contribution to `amat_lu`
+
+    Returns
+    -------
+    , : (L,L) ndarray
+        small inverse in the smw update
+
     """
     # aiu = np.zeros(umat.shape)
 
@@ -223,7 +264,21 @@ def get_Sinv_smw(amat_lu, umat=None, vmat=None):
 def app_luinv_to_spmat(alu_solve, Z):
     """ compute A.-1*Z  where A comes factored
 
-    and with a solve routine"""
+    and with a solve routine for possibly complex Z
+
+    Parameters
+    ----------
+    alu_solve : callable f(v)
+        returning a matrix inverse applied to `v`
+    Z : (N,K) ndarray, real or complex
+        the inverse is to be applied to
+
+    Returns
+    -------
+    , : (N,K) ndarray
+        matrix inverse applied to ndarray
+
+    """
 
     Z.tocsc()
     # ainvz = np.zeros(Z.shape)
@@ -242,10 +297,29 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
                 savefactoredby=5, return_alu=False):
     """compute the sherman morrison woodbury inverse
 
-    of
-        A - np.dot(U,V)
+    of `A - np.dot(U,V)` applied to an (array)rhs.
 
-    applied to (array)rhs.
+    Parameters
+    ----------
+    amat : (N,N) sparse matrix
+        main part of `A-UV`
+    umat, vmat : (N,L), (L,N) ndarrays or sparse matrices, optional
+        factored contribution to `amat`, default to `None`
+    rhsa : (N,K) ndarray array or sparse matrix
+        array the inverse of `A-UV` is to be applied to
+    Sinv : (L,L) ndarray, optional
+        the 'small' inverse in the smw formula, defaults to `None`
+    savefactoredby : integer, optional
+        if the number of columns of `rhsa` exceeds this parameter, the
+        lu decomposition of `A-UV` is stored
+    return_alu : boolean, optional
+        whether to return the lu decomposition of `A-UV`, defaults to `False`
+
+    Returns
+    -------
+    , : (N,K) ndarray
+        the inverse of `A-UV` applied to rhsa
+
     """
 
     if rhsa.shape[1] >= savefactoredby or return_alu:
