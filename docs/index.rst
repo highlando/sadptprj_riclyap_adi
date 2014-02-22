@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Saddle points projections and Newton ADI for Riccati Eqns's documentation!
-=====================================================================================
-This is a Python module for the solution of so called index-2 Differential Riccati equations.
+Saddle Points - Projections - Newton ADI for Constrained Riccati Equations 
+==========================================================================
+This is a Python module for the solution of so called index-2 Differential Riccati equations by low-rank ADI iterations.
 
 Contents:
 
