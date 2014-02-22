@@ -7,28 +7,28 @@ import scipy.sparse.linalg as spsla
 def app_prj_via_sadpnt(amat=None, jmat=None, rhsv=None,
                        jmatT=None, umat=None, vmat=None,
                        transposedprj=False):
-    """apply projection via solving a sadpnt problem
+    """Apply a projection via solving a saddle point problem.
 
-    let
-
-    .. math::
-
-        A = \\begin{bmatrix} M & J_1^T \\\\ J_2 & 0 \\end{bmatrix}
-
-    and let
+    The theory is as follows. Consider the projection
 
     .. math::
 
-        P = I - M^{-1}J_1^T(J_1^TM^{-1}J_2)^{-1}J_2
+        P = I - M^{-1}J_1^T(J_1^TM^{-1}J_2)^{-1}J_2.
 
-    then :math:`Pv` can be obtained via
+    Then :math:`Pv` can be obtained via
 
     .. math::
 
         A^{-1}\\begin{bmatrix} Pv \\\\ * \end{bmatrix} = \
-        \\begin{bmatrix} Mv \\\\ 0 \end{bmatrix}
+        \\begin{bmatrix} Mv \\\\ 0 \end{bmatrix},
 
-    and :math:`P^Tv` can be obtained via
+    where
+
+    .. math::
+
+        A := \\begin{bmatrix} M & J_1^T \\\\ J_2 & 0 \\end{bmatrix}.
+
+    And :math:`P^Tv` can be obtained via
 
     .. math::
 
