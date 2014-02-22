@@ -10,38 +10,49 @@ def app_prj_via_sadpnt(amat=None, jmat=None, rhsv=None,
     """apply projection via solving a sadpnt problem
 
     let
-    .. math:
+
+    .. math::
 
         A = \\begin{bmatrix} M & J_1^T \\\\ J_2 & 0 \\end{bmatrix}
 
     and let
-    .. math:
 
-        P = \\begin{bmatrix} I - \
-        M^{-1}J_1^T(J_1^TM^{-1}J_2)^{-1} \\end{bmatrix}
+    .. math::
+
+        P = I - M^{-1}J_1^T(J_1^TM^{-1}J_2)^{-1}J_2
 
     then :math:`Pv` can be obtained via
-    .. math:
+
+    .. math::
 
         A^{-1}\\begin{bmatrix} Pv \\\\ * \end{bmatrix} = \
         \\begin{bmatrix} Mv \\\\ 0 \end{bmatrix}
 
     and :math:`P^Tv` can be obtained via
-    .. math:
+
+    .. math::
 
         A^{-T}\\begin{bmatrix} M^{-T}P^Tv \\\\ * \end{bmatrix} = \
         \\begin{bmatrix} v \\\\ 0 \end{bmatrix}
 
-    :param amat: left upper entry in the saddlepoint matrix
-    :param jmat: left lower entry
-    :param jmatT: right upper entry, defaults to `jmat.T`
-    :param rhsv: array to be projected
-    :param umat, vmat:
-        low rank factored contribution to `amat`, default to `None`
-    :param transposedprj:
+    Parameters
+    ----------
+    amat : (N,N) sparse matrix
+        left upper entry in the saddlepoint matrix
+    jmat : (M,N) sparse matrix
+        left lower entry
+    jmatT : (N,M) sparse matrix, optional
+        right upper entry, defaults to `jmat.T`
+    rhsv : (N,K) ndarray
+        array to be projected
+    umat, vmat : (N,L), (L,N) ndarrays or sparse matrices, optional
+        factored contribution to `amat`, default to `None`
+    transposedprj : boolean
         whether to apply the transpose of the projection, defaults to `False`
 
-    :return:
+    Returns
+    -------
+    , : (N,K) ndarray
         projected `rhsv`
 
     """
@@ -71,9 +82,38 @@ def solve_sadpnt_smw(amat=None, jmat=None, rhsv=None,
                      jmatT=None, umat=None, vmat=None,
                      rhsp=None, sadlu=None,
                      return_alu=False):
-    """solves with
-            A - np.dot(U,V)    J.T  *  X   =   rhsv
-            J                   0              rhsp
+    """solve a saddle point system
+
+    A - np.dot(U,V)    J.T  *  X   =   rhsv
+    J                   0              rhsp
+    by sparse direct solves
+
+    Parameters
+    ----------
+    amat : (N,N) sparse matrix
+        left upper entry in the saddlepoint matrix
+    jmat : (M,N) sparse matrix
+        left lower entry
+    jmatT : (N,M) sparse matrix, optional
+        right upper entry, defaults to `jmat.T`
+    rhsv : (N,K) ndarray
+        upper part of right hand side
+    rhsp : (M,K) ndarray, optional
+        lower part of right hand side, defaults to zero
+    umat, vmat : (N,L), (L,N) ndarrays or sparse matrices, optional
+        factored contribution to `amat`, default to `None`
+    sadlu : callable f(v), optional
+        returns the inverse of the sadpoint matrix applied to `v`, defaults
+        to `None`
+    return_alu : boolean, optional
+        whether to return the lu factored sadpoint matrix
+
+    Returns
+    -------
+    , : (N,K) ndarray
+        projected `rhsv`
+    , : f(v) callable, optional
+        lu decomposition of the saddlepoint matrix
     """
 
     nnpp = jmat.shape[0]
