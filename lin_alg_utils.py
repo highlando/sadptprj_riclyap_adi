@@ -356,7 +356,7 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
             auvirhs.append(alu(crhs))
         except TypeError:
             # auvirhs[:, rhscol] = spsla.spsolve(alu, crhs)
-            auvirhs.append(spsla.spsolve(alu, crhs))
+            auvirhs.append(spsla.spsolve(alu, np.array(crhs)))
 
     if return_alu:
         return np.asarray(auvirhs).T, alu
@@ -441,3 +441,10 @@ def comp_uvz_spdns(umat, vmat, zmat):
         return umat * vz
     else:
         return np.dot(umat, vz)
+
+
+def matvec_densesparse(A, v):
+    try:
+        return A*v
+    except:
+        return np.dot(A, v)

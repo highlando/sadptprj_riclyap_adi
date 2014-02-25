@@ -51,7 +51,16 @@ def compare_freqresp(mmat=None, amat=None, jmat=None, bmat=None,
 
     cf. [HeiSS08, p. 1059] but with B_2 = 0
 
+    Returns
+    -------
+    freqrel : list of floats
+        the frob norm of the transferfunction at a frequency range
+    red_freqrel : list of floats
+        from of the tf of the reduced model at the same frequencies
+    absci : list of floats
+        frequencies where the tfs are evaluated at
     """
+
     if ahat is None:
         ahat = np.dot(tl.T, amat*tr)
     if bhat is None:
@@ -87,4 +96,54 @@ def compare_freqresp(mmat=None, amat=None, jmat=None, bmat=None,
         plt.semilogx()
         plt.semilogy()
         plt.show(block=False)
+
     return freqrel, red_freqrel, absci
+
+
+def compare_stepresp(tmesh=None, a_mat=None, c_mat=None, b_mat=None,
+                     m_mat=None, tl=None, tr=None,
+                     iniv=None,
+                     fullresp=None, fsr_soldict=None,
+                     plot=True):
+    """ compute the system's step response to unit inputs in time domain
+
+    """
+
+    from scipy.integrate import odeint
+
+    ahat = np.dot(tl.T, a_mat*tr)
+    chat = lau.matvec_densesparse(c_mat, tr)
+
+    inivhat = np.dot(tl.T, m_mat*iniv)
+
+    inivout = lau.matvec_densesparse(c_mat, iniv)
+
+    # print np.linalg.norm(red_ss_rhs.flatten()), np.linalg.norm(ss_rhs)
+
+    red_stp_rsp, ful_stp_rsp = [], []
+    for ccol in range(2):  # b_mat.shape[1]):
+        bmc = b_mat[:, ccol][:, :]
+        red_bmc = tl.T * bmc
+
+        def dtfunc(v, t):
+            return (np.dot(ahat, v).flatten() + red_bmc.flatten())  # +\
+                # red_ss_rhs.flatten())
+
+        red_state = odeint(dtfunc, 0*inivhat.flatten(), tmesh)
+        red_stp_rsp.append(np.dot(chat, red_state.T))
+        ful_stp_rsp.append(fullresp(bcol=bmc, trange=tmesh, ini_vel=iniv,
+                           cmat=c_mat, soldict=fsr_soldict))
+
+    if plot:
+        for ccol in range(2):  # b_mat.shape[1]):
+            redoutp = red_stp_rsp[ccol].T
+            fig = plt.figure(ccol)
+            ax1 = fig.add_subplot(311)
+            ax1.plot(tmesh, redoutp)
+            fuloutp = ful_stp_rsp[ccol]
+            ax2 = fig.add_subplot(312)
+            ax2.plot(tmesh, fuloutp)
+            fig.show()
+            ax3 = fig.add_subplot(313)
+            ax3.plot(tmesh, fuloutp-inivout)
+            fig.show()
