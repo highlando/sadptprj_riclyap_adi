@@ -296,7 +296,11 @@ def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
             vecn1 = comp_diff_zzv(znn, znc, vec)
             vec = np.random.randn(znn.shape[0], 1)
             vecn2 = comp_diff_zzv(znn, znc, vec)
-            if vecn2 + vecn1 < 8e-9:
+            vec = np.random.randn(znn.shape[0], 1)
+            # to make the estimate relative
+            vecn3 = np.linalg.norm(np.dot(znn, np.dot(znn.T, vec)))
+            print vecn3
+            if (vecn2 + vecn1)/vecn3 < 8e-9:
                 # znred = compress_Zsvd(znn, thresh=1e-6, shplot=True)
                 # zcred = compress_Zsvd(znc, thresh=1e-6, shplot=False)
                 # upred_fnorm = lau.comp_sqfnrm_factrd_diff(znred, zcred)
