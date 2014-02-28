@@ -256,7 +256,7 @@ def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
         wmat = np.array(wmat.todense())
 
     znc = z0
-    nwtn_stp, upd_fnorm = 0, 2
+    nwtn_stp, upd_fnorm, upd_fnorm_n = 0, 2, 1
     nwtn_upd_fnorms = []
 
     while nwtn_stp < nwtn_adi_dict['nwtn_max_steps'] and \
@@ -299,19 +299,17 @@ def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
             vec = np.random.randn(znn.shape[0], 1)
             # to make the estimate relative
             vecn3 = np.linalg.norm(np.dot(znn, np.dot(znn.T, vec)))
-            print vecn3
             if (vecn2 + vecn1)/vecn3 < 8e-9:
-                # znred = compress_Zsvd(znn, thresh=1e-6, shplot=True)
-                # zcred = compress_Zsvd(znc, thresh=1e-6, shplot=False)
-                # upred_fnorm = lau.comp_sqfnrm_factrd_diff(znred, zcred)
                 upd_fnorm, nzn, nzc = lau.\
                     comp_sqfnrm_factrd_diff(znn, znc, ret_sing_norms=True)
-                # print 'shapes', znn.shape, znred.shape
-                # print 'comp upd norms', upd_fnorm, upred_fnorm
-                # print vecn2+vecn1, znc.shape
-                upd_fnorm = np.sqrt(np.abs(upd_fnorm) / np.abs(nzn))
+                upd_fnorm_n = np.sqrt(np.abs(upd_fnorm) / np.abs(nzn))
 
-        nwtn_upd_fnorms.append(upd_fnorm)
+        nwtn_upd_fnorms.append(upd_fnorm_n)
+        if np.allclose(upd_fnorm_n, upd_fnorm):
+            print 'no more change in the norm of the update... break'
+            break
+        elif (vecn2 + vecn1)/vecn3 < 8e-9:
+            upd_fnorm = upd_fnorm_n
 
         try:
             if nwtn_adi_dict['verbose']:
@@ -319,9 +317,9 @@ def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
                        'rel f norm of update: {0}').format(upd_fnorm,
                                                            nwtn_stp + 1)
                 if not nwtn_adi_dict['full_upd_norm_check']:
-                    print ('btw... we used an estimated norm:').\
-                        format(nwtn_stp + 1)
+                    print ('btw, we decided on the base of estimates:')
                     print '|| upd * vec || / || vec || = {0}'.format(vecn2)
+                    print '||Z*vec|| = {0}'.format(vecn3)
 
         except KeyError:
             pass    # no verbosity specified - nothing is shown

@@ -73,9 +73,9 @@ def compare_freqresp(mmat=None, amat=None, jmat=None, bmat=None,
 
     imunit = 1j
 
-    absci = np.logspace(-4, 4, base=10)
+    absci = np.logspace(-4, 8, base=10)
 
-    freqrel, red_freqrel = [], []
+    freqrel, red_freqrel, diff_freqrel = [], [], []
 
     for omega in absci:
         sadib = lau.solve_sadpnt_smw(amat=omega*imunit*mmat-amat,
@@ -85,18 +85,29 @@ def compare_freqresp(mmat=None, amat=None, jmat=None, bmat=None,
 
         aib = np.linalg.solve(omega*imunit*np.eye(red_nv) - ahat, bhat)
         red_freqrel.append(np.linalg.norm(np.dot(chat, aib)))
+        diff_freqrel.append(np.linalg.norm(np.dot(chat, aib)
+                                           - cmat*sadib[:NV, :]))
         # print red_freqrel[-1]
 
     if plot:
         legstr = ['NV was {0}'.format(mmat.shape[0]),
-                  'nv is {0}'.format(tr.shape[1])]
+                  'nv is {0}'.format(tr.shape[1]),
+                  'difference in the norms']
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        ax.plot(absci, freqrel, absci, red_freqrel)
+        ax.plot(absci, freqrel, color='b', linewidth=2.0)
+        ax.plot(absci, red_freqrel, color='r', linewidth=2.0)
+        ax.plot(absci, diff_freqrel, color='b', linewidth=1.0)
         plt.legend(legstr, loc=3)
         plt.semilogx()
         plt.semilogy()
         plt.show(block=False)
+
+        from matplotlib2tikz import save as tikz_save
+        tikz_save('freqresp.tikz',
+                  figureheight='\\figureheight',
+                  figurewidth='\\figurewidth'
+                  )
 
     return freqrel, red_freqrel, absci
 
@@ -156,7 +167,7 @@ def compare_stepresp(tmesh=None, a_mat=None, c_mat=None, b_mat=None,
     inivout = lau.matvec_densesparse(c_mat, iniv).tolist()
 
     red_stp_rsp, ful_stp_rsp = [], []
-    for ccol in [0, b_mat.shape[1]-1]:  # range(2):  # b_mat.shape[1]):
+    for ccol in [0]:  # , b_mat.shape[1]-1]:  # range(2):  # b_mat.shape[1]):
         bmc = b_mat[:, ccol][:, :]
         red_bmc = tl.T * bmc
 
@@ -170,21 +181,26 @@ def compare_stepresp(tmesh=None, a_mat=None, c_mat=None, b_mat=None,
                            cmat=c_mat, soldict=fsr_soldict))
 
     if jsonstr:
-        dou.save_output_json(datadict={tmesh: tmesh,
-                                       ful_stp_rsp: ful_stp_rsp,
-                                       red_stp_rsp: red_stp_rsp,
-                                       inivout: inivout},
+        try:
+            tmesh = tmesh.tolist()
+        except AttributeError:
+            pass  # is a list already
+        dou.save_output_json(datadict={"tmesh": tmesh,
+                                       "ful_stp_rsp": ful_stp_rsp,
+                                       "red_stp_rsp": red_stp_rsp,
+                                       "inivout": inivout},
                              fstring=jsonstr,
-                             importcall='from bal import plotroutine',
-                             plotroutine='plotroutine')
+                             module='sadptprj_riclyap_adi.bal_trunc_utils',
+                             plotroutine='plot_step_resp')
 
     if plot:
         plot_step_resp(tmesh=tmesh, red_stp_rsp=red_stp_rsp,
                        ful_stp_rsp=ful_stp_rsp, inivout=inivout)
 
 
-def plot_step_resp(tmesh=None, red_stp_rsp=None, ful_stp_rsp=None,
-                   inivout=None, str_to_json=None):
+def plot_step_resp(str_to_json=None, tmesh=None,
+                   red_stp_rsp=None, ful_stp_rsp=None, inivout=None):
+    from matplotlib2tikz import save as tikz_save
 
     if str_to_json is not None:
         jsdict = dou.load_json_dicts(str_to_json)
@@ -192,16 +208,31 @@ def plot_step_resp(tmesh=None, red_stp_rsp=None, ful_stp_rsp=None,
         red_stp_rsp = jsdict['red_stp_rsp']
         ful_stp_rsp = jsdict['ful_stp_rsp']
         inivout = jsdict['inivout']
+    else:
+        str_to_json = 'notspecified'
 
     for ccol in range(len(red_stp_rsp)):
         # [0, b_mat.shape[1]-1]:  # range(2):  # b_mat.shape[1]):
-        redoutp = red_stp_rsp[ccol]
-        fig = plt.figure(100 + ccol)
+        fuloutp = np.array(ful_stp_rsp[ccol])-np.array(inivout).T
+        redoutp = np.array(red_stp_rsp[ccol])
+        outdiff = fuloutp - redoutp
+        NY = fuloutp.shape[1]/2
+        fig = plt.figure(200 + ccol)
+
         ax1 = fig.add_subplot(131)
-        ax1.plot(tmesh, redoutp)
-        fuloutp = ful_stp_rsp[ccol]
+        ax1.plot(tmesh, redoutp[:, :NY], color='b', linewidth=2.0)
+        ax1.plot(tmesh, redoutp[:, NY:], color='r', linewidth=2.0)
+
         ax2 = fig.add_subplot(132)
-        ax2.plot(tmesh, np.array(fuloutp)-np.array(inivout).T)
+        ax2.plot(tmesh, fuloutp[:, :NY], color='b', linewidth=2.0)
+        ax2.plot(tmesh, fuloutp[:, NY:], color='r', linewidth=2.0)
+
         ax3 = fig.add_subplot(133)
-        ax3.plot(tmesh, np.array(fuloutp)-np.array(redoutp)-np.array(inivout).T)
+        ax3.plot(tmesh, outdiff[:, :NY], color='b', linewidth=2.0)
+        ax3.plot(tmesh, outdiff[:, NY:], color='r', linewidth=2.0)
+
+        tikz_save(str_to_json + '{0}'.format(200+ccol) + '.tikz',
+                  figureheight='\\figureheight',
+                  figurewidth='\\figurewidth'
+                  )
         fig.show()
