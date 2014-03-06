@@ -37,8 +37,8 @@ def compute_lrbt_transfos(zfc=None, zfo=None, mmat=None,
 
     svsqri_mat = sps.diags(svsqri, 0)
 
-    tl = np.dot(zfo, rsvk*svsqri_mat)
-    tr = np.dot(zfc, lsvk*svsqri_mat)
+    tl = np.dot(zfc, lsvk*svsqri_mat)
+    tr = np.dot(zfo, rsvk*svsqri_mat)
 
     return tl, tr
 
