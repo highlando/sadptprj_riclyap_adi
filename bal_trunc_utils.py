@@ -35,7 +35,7 @@ def compute_lrbt_transfos(zfc=None, zfo=None, mmat=None,
 
     svsqri = 1./np.sqrt(svk)
 
-    svsqri_mat = sps.diags(svsqri, 0)
+    svsqri_mat = sps.dia_matrix((svsqri, np.array[0]), shape=(k, k))
 
     tl = np.dot(zfc, lsvk*svsqri_mat)
     tr = np.dot(zfo, rsvk*svsqri_mat)
