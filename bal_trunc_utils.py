@@ -46,7 +46,7 @@ def compute_lrbt_transfos(zfc=None, zfo=None, mmat=None,
 def compare_freqresp(mmat=None, amat=None, jmat=None, bmat=None,
                      cmat=None, tr=None, tl=None,
                      ahat=None, bhat=None, chat=None,
-                     plot=False):
+                     plot=False, datastr=None):
     """
     compare the frequency response of the original and the reduced model
 
@@ -89,10 +89,17 @@ def compare_freqresp(mmat=None, amat=None, jmat=None, bmat=None,
                                            - cmat*sadib[:NV, :]))
         # print red_freqrel[-1]
 
+    if datastr is not None:
+        dou.save_output_json(dict(tmesh=absci.tolist(),
+                                  fullsysfr=freqrel,
+                                  redsysfr=red_freqrel,
+                                  diffsysfr=diff_freqrel),
+                             fstring=datastr + 'forfreqrespplot')
+
     if plot:
         legstr = ['NV was {0}'.format(mmat.shape[0]),
                   'nv is {0}'.format(tr.shape[1]),
-                  'difference in the norms']
+                  'difference']
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.plot(absci, freqrel, color='b', linewidth=2.0)
@@ -104,7 +111,7 @@ def compare_freqresp(mmat=None, amat=None, jmat=None, bmat=None,
         plt.show(block=False)
 
         from matplotlib2tikz import save as tikz_save
-        tikz_save('freqresp.tikz',
+        tikz_save(datastr + 'freqresp.tikz',
                   figureheight='\\figureheight',
                   figurewidth='\\figurewidth'
                   )
@@ -199,17 +206,25 @@ def compare_stepresp(tmesh=None, a_mat=None, c_mat=None, b_mat=None,
 
 
 def plot_step_resp(str_to_json=None, tmesh=None,
-                   red_stp_rsp=None, ful_stp_rsp=None, inivout=None):
+                   red_stp_rsp=None, ful_stp_rsp=None, inivout=None,
+                   compress=20):
+    """
+    compress : real, optional
+        factor of compressing for plot, defaults to 20
+    """
     from matplotlib2tikz import save as tikz_save
 
     if str_to_json is not None:
         jsdict = dou.load_json_dicts(str_to_json)
-        tmesh = jsdict['tmesh']
+        tmesh = np.array(jsdict['tmesh'])
         red_stp_rsp = jsdict['red_stp_rsp']
         ful_stp_rsp = jsdict['ful_stp_rsp']
         inivout = jsdict['inivout']
     else:
         str_to_json = 'notspecified'
+
+    redinds = range(0, len(tmesh), compress)
+    redina = np.array(redinds)
 
     for ccol in range(len(red_stp_rsp)):
         # [0, b_mat.shape[1]-1]:  # range(2):  # b_mat.shape[1]):
@@ -220,19 +235,20 @@ def plot_step_resp(str_to_json=None, tmesh=None,
         fig = plt.figure(200 + ccol)
 
         ax1 = fig.add_subplot(131)
-        ax1.plot(tmesh, redoutp[:, :NY], color='b', linewidth=2.0)
-        ax1.plot(tmesh, redoutp[:, NY:], color='r', linewidth=2.0)
+        ax1.plot(tmesh[redina], redoutp[redina, :NY], color='b', linewidth=2.0)
+        ax1.plot(tmesh[redina], redoutp[redina, NY:], color='r', linewidth=2.0)
 
         ax2 = fig.add_subplot(132)
-        ax2.plot(tmesh, fuloutp[:, :NY], color='b', linewidth=2.0)
-        ax2.plot(tmesh, fuloutp[:, NY:], color='r', linewidth=2.0)
+        ax2.plot(tmesh[redina], fuloutp[redina, :NY], color='b', linewidth=2.0)
+        ax2.plot(tmesh[redina], fuloutp[redina, NY:], color='r', linewidth=2.0)
 
         ax3 = fig.add_subplot(133)
-        ax3.plot(tmesh, outdiff[:, :NY], color='b', linewidth=2.0)
-        ax3.plot(tmesh, outdiff[:, NY:], color='r', linewidth=2.0)
+        ax3.plot(tmesh[redina], outdiff[redina, :NY], color='b', linewidth=2.0)
+        ax3.plot(tmesh[redina], outdiff[redina, NY:], color='r', linewidth=2.0)
 
         tikz_save(str_to_json + '{0}'.format(200+ccol) + '.tikz',
                   figureheight='\\figureheight',
                   figurewidth='\\figurewidth'
                   )
+        print 'saved to ' + str_to_json + '{0}'.format(200+ccol) + '.tikz'
         fig.show()
