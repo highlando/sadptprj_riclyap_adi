@@ -284,11 +284,12 @@ def app_luinv_to_spmat(alu_solve, Z):
     # ainvz = np.zeros(Z.shape)
     ainvzl = []  # to allow for complex values
     for ccol in range(Z.shape[1]):
-        try:
-            ainvzl.append(alu_solve(Z[:, ccol].toarray().flatten()))
-        except TypeError:
-            ainvzl.append(alu_solve(Z[:, ccol].toarray().flatten().real) +
-                          1j*alu_solve(Z[:, ccol].toarray().flatten().imag))
+        zcol = Z[:, ccol].toarray().flatten()
+        if np.isrealobj(zcol):
+            ainvzl.append(alu_solve(zcol))
+        else:
+            ainvzl.append(alu_solve(zcol.real) +
+                          1j*alu_solve(zcol.imag))
 
     return np.asarray(ainvzl).T
 
