@@ -308,7 +308,9 @@ def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
         if np.allclose(upd_fnorm_n, upd_fnorm):
             print 'no more change in the norm of the update... break'
             break
-        else:
+        elif nwtn_adi_dict['full_upd_norm_check']:
+            upd_fnorm = upd_fnorm_n
+        elif (vecn2 + vecn1)/vecn3 < 8e-9:
             upd_fnorm = upd_fnorm_n
 
         try:

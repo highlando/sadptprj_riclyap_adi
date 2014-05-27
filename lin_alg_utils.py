@@ -198,6 +198,35 @@ def apply_massinv(M, rhsa, output=None):
         return mirhs
 
 
+def apply_sqrt_fromleft(M, rhsa, output=None):
+    """apply the sqrt of a mass matrix or other spd
+
+    TODO: cases for dense and sparse INPUTS
+
+    Parameters
+    ----------
+    M : (N,N) sparse matrix
+        symmetric strictly positive definite
+    rhsa : (K,N) ndarray array or sparse matrix
+        array the inverse of M is to be applied to
+    output : string, optional
+        set to 'sparse' if rhsa has many zero rows
+        to get the output as a sparse matrix
+
+    Returns
+    -------
+    , : (N,K) ndarray or sparse matrix
+        the sqrt of the inverse of `M` applied to `rhsa` from the left
+
+    """
+    Z = scipy.linalg.cholesky(M.todense())
+    # R = Z.T*Z  <-> R^-1 = Z^-1*Z.-T
+    if output == 'sparse':
+        return sps.csc_matrix(rhsa * Z)
+    else:
+        return np.dot(rhsa, Z)
+
+
 def apply_invsqrt_fromleft(M, rhsa, output=None):
     """apply the sqrt of the inverse of a mass matrix or other spd
 
