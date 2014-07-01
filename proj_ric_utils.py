@@ -71,6 +71,9 @@ def solve_proj_lyap_stein(amat=None, jmat=None, wmat=None, mmat=None,
     except KeyError:
         ms = [-30.0, -20.0, -10.0, -5.0, -3.0, -1.0]
 
+    if adi_dict['verbose']:
+        print ('Adishifts: {0} \n').format(ms)
+
     NZ = wmat.shape[0]
 
     def get_atmtlu(At, Mt, jmat, ms):
