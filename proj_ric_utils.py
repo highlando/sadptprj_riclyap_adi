@@ -66,7 +66,11 @@ def solve_proj_lyap_stein(amat=None, jmat=None, wmat=None, mmat=None,
         At, Mt = amat.T, mmat.T
 
     # TODO: compute optimal shifts
-    ms = [-30.0, -20.0, -10.0, -5.0, -3.0, -1.0]
+    try:
+        ms = adi_dict['ms']
+    except KeyError:
+        ms = [-30.0, -20.0, -10.0, -5.0, -3.0, -1.0]
+
     NZ = wmat.shape[0]
 
     def get_atmtlu(At, Mt, jmat, ms):
@@ -281,7 +285,7 @@ def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
                                     wmat=rhsadi,
                                     umat=bmat, vmat=mtxbt,
                                     transposed=transposed,
-                                    adi_dict=nwtn_adi_dict)['zfac']
+                                    nwtn_adi_dict=nwtn_adi_dict)['zfac']
 
         if nwtn_adi_dict['full_upd_norm_check']:
             if znc is None:  # there was no initial guess
