@@ -72,7 +72,7 @@ def solve_proj_lyap_stein(amat=None, jmat=None, wmat=None, mmat=None,
         ms = [-30.0, -20.0, -10.0, -5.0, -3.0, -1.0]
 
     if adi_dict['verbose']:
-        print ('Adishifts: {0} \n').format(ms)
+        print ('Adishifts: {0} ').format(ms)
 
     NZ = wmat.shape[0]
 
@@ -142,6 +142,7 @@ def solve_proj_lyap_stein(amat=None, jmat=None, wmat=None, mmat=None,
         u_norm_sqrd = np.linalg.norm(Z) ** 2
 
         muind = 1
+        muind = np.mod(muind, len(ms))
 
         while adi_step < adi_dict['adi_max_steps'] and \
                 rel_newZ_norm > adi_dict['adi_newZ_reltol']:
@@ -194,6 +195,7 @@ def solve_proj_lyap_stein(amat=None, jmat=None, wmat=None, mmat=None,
         ufac = Z
         u_norm_sqrd = np.linalg.norm(Z) ** 2
         muind = 1
+        muind = np.mod(muind, len(ms))
 
         while adi_step < adi_dict['adi_max_steps'] and \
                 rel_newZ_norm > adi_dict['adi_newZ_reltol']:
@@ -238,7 +240,7 @@ def get_mTzzTtb(MT, Z, tB, output=None):
 
 
 def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
-                           bmat=None, wmat=None, z0=None,
+                           bmat=None, wmat=None, z0=None, mtxoldb=None,
                            transposed=False,
                            nwtn_adi_dict=dict(adi_max_steps=150,
                                               adi_newZ_reltol=1e-5,
@@ -247,9 +249,17 @@ def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
                            **kw):
     """ solve the projected algebraic ricc via newton adi
 
-    M.T*X*A + A.T*X*M - M.T*X*B*B.T*X*M + J(Y) = -WW.T
+    `M.T*X*A + A.T*X*M - M.T*X*B*B.T*X*M + J(Y) = -WW.T`
 
-    JXM = 0 and M.TXJ.T = 0
+    `JXM = 0 and M.TXJ.T = 0`
+
+    If `mtxb` is given,
+    (e.g. as the feedback computed in a previous step of a Newton iteration),
+    the coefficient matrix with feedback
+
+    `A.T <- A.T - mtxb*b`
+
+    is considered
 
     """
 
@@ -257,7 +267,7 @@ def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
         mt, at = mmat, amat
     else:
         mt, at = mmat.T, amat.T
-        transposed = True
+    loctransposed = True
 
     if sps.isspmatrix(wmat):
         wmat = np.array(wmat.todense())
@@ -279,15 +289,17 @@ def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
                 mtxb = mt * np.dot(znc, znc.T * bmat)
             mtxbt = mtxb.T
             rhsadi = np.hstack([mtxb, wmat])
-
         # to avoid a dense matrix we use the smw formula
         # to compute (A-UV).-T
-        # for the factorization mTxg.T =  tb * mTxtb = U*V
+        # for the factorization mTxg.T =  tb * mTxtb.T = U*V
+        # and we add the previous feedback:
+        if mtxoldb is not None:
+            mtxbt = mtxbt + mtxoldb.T
 
         znn = solve_proj_lyap_stein(amat=at, mmat=mt, jmat=jmat,
                                     wmat=rhsadi,
                                     umat=bmat, vmat=mtxbt,
-                                    transposed=transposed,
+                                    transposed=loctransposed,
                                     nwtn_adi_dict=nwtn_adi_dict)['zfac']
 
         if nwtn_adi_dict['full_upd_norm_check']:

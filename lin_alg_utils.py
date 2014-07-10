@@ -198,7 +198,7 @@ def apply_massinv(M, rhsa, output=None):
         return mirhs
 
 
-def apply_sqrt_fromleft(M, rhsa, output=None):
+def apply_sqrt_fromright(M, rhsa, output=None):
     """apply the sqrt of a mass matrix or other spd
 
     TODO: cases for dense and sparse INPUTS
@@ -227,7 +227,7 @@ def apply_sqrt_fromleft(M, rhsa, output=None):
         return np.dot(rhsa, Z)
 
 
-def apply_invsqrt_fromleft(M, rhsa, output=None):
+def apply_invsqrt_fromright(M, rhsa, output=None):
     """apply the sqrt of the inverse of a mass matrix or other spd
 
     TODO: cases for dense and sparse INPUTS
@@ -251,9 +251,9 @@ def apply_invsqrt_fromleft(M, rhsa, output=None):
     Z = scipy.linalg.cholesky(M.todense())
     # R = Z.T*Z  <-> R^-1 = Z^-1*Z.-T
     if output == 'sparse':
-        return sps.csc_matrix(rhsa * np.linalg.inv(Z))
+        return sps.csc_matrix(rhsa * np.linalg.inv(Z.T))
     else:
-        return np.dot(rhsa, np.linalg.inv(Z))
+        return np.dot(rhsa, np.linalg.inv(Z.T))
 
 
 def get_Sinv_smw(amat_lu, umat=None, vmat=None):
