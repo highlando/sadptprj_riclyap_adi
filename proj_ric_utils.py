@@ -72,7 +72,7 @@ def solve_proj_lyap_stein(amat=None, jmat=None, wmat=None, mmat=None,
         ms = [-30.0, -20.0, -10.0, -5.0, -3.0, -1.0]
 
     if adi_dict['verbose']:
-        print ('Adishifts: {0} ').format(ms)
+        print ('\nAdishifts: {0} ').format(ms)
 
     NZ = wmat.shape[0]
 
@@ -338,7 +338,8 @@ def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
                        'rel f norm of update: {0}').format(upd_fnorm,
                                                            nwtn_stp + 1)
                 if not nwtn_adi_dict['full_upd_norm_check']:
-                    print ('btw, we decided on the base of estimates:')
+                    print ('btw, we decided whether to compute the actual' +
+                           'norm on the base of estimates:')
                     print '|| upd * vec || / || vec || = {0}'.format(vecn2)
                     print '||Z*vec|| = {0}'.format(vecn3)
 
