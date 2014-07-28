@@ -377,9 +377,10 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
                 aicrhs = spsla.spsolve(alu, crhs)
 
             if sps.isspmatrix(vmat):
-                crhs = crhs + np.dot(umat, np.dot(Sinv, vmat * aicrhs))
+                crhs = crhs + matmat_dnssps(umat, np.dot(Sinv, vmat * aicrhs))
             else:
-                crhs = crhs + np.dot(umat, np.dot(Sinv, np.dot(vmat, aicrhs)))
+                crhs = crhs + matmat_dnssps(umat,
+                                            np.dot(Sinv, np.dot(vmat, aicrhs)))
 
         try:
             # auvirhs[:, rhscol] = alu(crhs)
@@ -473,8 +474,8 @@ def comp_uvz_spdns(umat, vmat, zmat):
         return np.dot(umat, vz)
 
 
-def matvec_densesparse(A, v):
-    try:
+def matmat_dnssps(A, v):
+    if sps.isspmatrix(A) or sps.isspmatrix(v):
         return A*v
-    except:
+    else:
         return np.dot(A, v)
