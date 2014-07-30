@@ -275,13 +275,17 @@ def get_Sinv_smw(amat_lu, umat=None, vmat=None):
 
     """
     # aiu = np.zeros(umat.shape)
+    if sps.isspmatrix(umat):
+        locumat = np.array(umat.todense())
+    else:
+        locumat = umat
 
     aiul = []  # to allow for complex values
-    for ccol in range(umat.shape[1]):
+    for ccol in range(locumat.shape[1]):
         try:
-            aiul.append(amat_lu(umat[:, ccol]))
+            aiul.append(amat_lu(locumat[:, ccol]))
         except TypeError:
-            aiul.append(spsla.spsolve(amat_lu, umat[:, ccol]))
+            aiul.append(spsla.spsolve(amat_lu, locumat[:, ccol]))
     aiu = np.asarray(aiul).T
 
     if sps.isspmatrix(vmat):
@@ -324,7 +328,7 @@ def app_luinv_to_spmat(alu_solve, Z):
 
 
 def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
-                savefactoredby=5, return_alu=False):
+                savefactoredby=5, return_alu=False, alu=None):
     """compute the sherman morrison woodbury inverse
 
     of `A - np.dot(U,V)` applied to an (array)rhs.
@@ -341,9 +345,11 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
         the 'small' inverse in the smw formula, defaults to `None`
     savefactoredby : integer, optional
         if the number of columns of `rhsa` exceeds this parameter, the
-        lu decomposition of `A-UV` is stored
+        lu decomposition of `amat` is stored
     return_alu : boolean, optional
-        whether to return the lu decomposition of `A-UV`, defaults to `False`
+        whether to return the lu decomposition of `amat`, defaults to `False`
+    alu : amat.factorized(), optional
+        `lu` factorization of amat
 
     Returns
     -------
@@ -357,7 +363,7 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
             alu = spsla.factorized(amat)
         except (NotImplementedError, TypeError):
             alu = amat
-    else:
+    elif alu is None:
         alu = amat
 
     # auvirhs = np.zeros(rhsa.shape)
