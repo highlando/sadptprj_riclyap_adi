@@ -328,7 +328,8 @@ def app_luinv_to_spmat(alu_solve, Z):
 
 
 def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
-                savefactoredby=5, return_alu=False, alu=None):
+                savefactoredby=5, return_alu=False, alu=None,
+                krylov=None, krplinsys=None):
     """compute the sherman morrison woodbury inverse
 
     of `A - np.dot(U,V)` applied to an (array)rhs.
@@ -350,6 +351,16 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
         whether to return the lu decomposition of `amat`, defaults to `False`
     alu : amat.factorized(), optional
         `lu` factorization of amat
+    krylov : {None, 'gmres'}, optional
+        whether or not to use an iterative solver, defaults to `None`
+    krplinsys : krypy.LinearSystem, optional
+        an instance of krypy's LinearSystem that may specify, e.g.,
+
+          * initial guess
+          * number of iterations
+          * preconditioning
+
+        defaults to `None`
 
     Returns
     -------
@@ -357,48 +368,62 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
         the inverse of `A-UV` applied to rhsa
 
     """
+    if krylov is not None:
+        import krypy.linsys as kls
 
-    if rhsa.shape[1] >= savefactoredby or return_alu:
-        try:
-            alu = spsla.factorized(amat)
-        except (NotImplementedError, TypeError):
-            alu = amat
-    elif alu is None:
-        alu = amat
+        if krplinsys is None:
+            krplinsys = kls.LinearSystem()
 
-    # auvirhs = np.zeros(rhsa.shape)
-    auvirhs = []
-    for rhscol in range(rhsa.shape[1]):
-        crhs = rhsa[:, rhscol]
-        # branch with u and v present
-        if umat is not None:
-            if Sinv is None:
-                Sinv = get_Sinv_smw(alu, umat, vmat)
-
-            # the corrected rhs: (I + U*Sinv*V*Ainv)*rhs
-            try:
-                # if Alu comes factorized, e.g. LU-factored - fine
-                aicrhs = alu(crhs)
-            except TypeError:
-                aicrhs = spsla.spsolve(alu, crhs)
-
-            if sps.isspmatrix(vmat):
-                crhs = crhs + mm_dnssps(umat, np.dot(Sinv, vmat * aicrhs))
+        def auvb(v):
+            if umat is None:
+                return amat*v
             else:
-                crhs = crhs + mm_dnssps(umat,
-                                        np.dot(Sinv, np.dot(vmat, aicrhs)))
+                return amat*v - mm_dnssps(umat, mm_dnssps(vmat, v))
 
-        try:
-            # auvirhs[:, rhscol] = alu(crhs)
-            auvirhs.append(alu(crhs))
-        except TypeError:
-            # auvirhs[:, rhscol] = spsla.spsolve(alu, crhs)
-            auvirhs.append(spsla.spsolve(alu, np.array(crhs)))
+        return None
 
-    if return_alu:
-        return np.asarray(auvirhs).T, alu
     else:
-        return np.asarray(auvirhs).T
+        if rhsa.shape[1] >= savefactoredby or return_alu:
+            try:
+                alu = spsla.factorized(amat)
+            except (NotImplementedError, TypeError):
+                alu = amat
+        elif alu is None:
+            alu = amat
+
+        # auvirhs = np.zeros(rhsa.shape)
+        auvirhs = []
+        for rhscol in range(rhsa.shape[1]):
+            crhs = rhsa[:, rhscol]
+            # branch with u and v present
+            if umat is not None:
+                if Sinv is None:
+                    Sinv = get_Sinv_smw(alu, umat, vmat)
+
+                # the corrected rhs: (I + U*Sinv*V*Ainv)*rhs
+                try:
+                    # if Alu comes factorized, e.g. LU-factored - fine
+                    aicrhs = alu(crhs)
+                except TypeError:
+                    aicrhs = spsla.spsolve(alu, crhs)
+
+                if sps.isspmatrix(vmat):
+                    crhs = crhs + mm_dnssps(umat, np.dot(Sinv, vmat * aicrhs))
+                else:
+                    crhs = crhs + mm_dnssps(umat,
+                                            np.dot(Sinv, np.dot(vmat, aicrhs)))
+
+            try:
+                # auvirhs[:, rhscol] = alu(crhs)
+                auvirhs.append(alu(crhs))
+            except TypeError:
+                # auvirhs[:, rhscol] = spsla.spsolve(alu, crhs)
+                auvirhs.append(spsla.spsolve(alu, np.array(crhs)))
+
+        if return_alu:
+            return np.asarray(auvirhs).T, alu
+        else:
+            return np.asarray(auvirhs).T
 
 
 def comp_sqfnrm_factrd_diff(zone, ztwo, ret_sing_norms=False):
