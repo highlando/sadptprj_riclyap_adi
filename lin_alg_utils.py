@@ -329,7 +329,7 @@ def app_luinv_to_spmat(alu_solve, Z):
 
 def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
                 savefactoredby=5, return_alu=False, alu=None,
-                krylov=None, krplinsys=None):
+                krylov=None, krpprms=None):
     """compute the sherman morrison woodbury inverse
 
     of `A - np.dot(U,V)` applied to an (array)rhs.
@@ -353,8 +353,8 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
         `lu` factorization of amat
     krylov : {None, 'gmres'}, optional
         whether or not to use an iterative solver, defaults to `None`
-    krplinsys : krypy.LinearSystem, optional
-        an instance of krypy's LinearSystem that may specify, e.g.,
+    krpprms : dictionary, optional
+        to specify parameters of the linear solver for use in Krypy, e.g.,
 
           * initial guess
           * number of iterations
@@ -371,16 +371,22 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
     if krylov is not None:
         import krypy.linsys as kls
 
-        if krplinsys is None:
-            krplinsys = kls.LinearSystem()
-
         def auvb(v):
             if umat is None:
                 return amat*v
             else:
                 return amat*v - mm_dnssps(umat, mm_dnssps(vmat, v))
 
-        return None
+        auvblo = spsla.LinearOperator(amat.shape, matvec=auvb,
+                                      dtype='float64')
+
+        auvirhs = []
+        for rhscol in range(rhsa.shape[1]):
+            crhs = rhsa[:, rhscol]
+            krplinsys = kls.LinearSystem(A=auvblo, b=crhs)
+            auvirhs.append((kls.Gmres(krplinsys)).xk)
+
+        return np.asarray(auvirhs)[:, :, 0].T
 
     else:
         if rhsa.shape[1] >= savefactoredby or return_alu:

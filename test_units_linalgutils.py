@@ -52,6 +52,20 @@ class TestLinalgUtils(unittest.TestCase):
                                            np.dot(self.V, AuvInvZ))
         self.assertTrue(np.allclose(AAinvZ, self.Z))
 
+    def test_smw_formula_krypy(self):
+        """check the smw using krypy's gmres
+
+        """
+
+        AuvInvZ = lau.app_smw_inv(self.A, umat=self.U, vmat=self.V,
+                                  rhsa=self.Z, krylov=True)
+        AAinvZ = self.A * AuvInvZ - np.dot(self.U,
+                                           np.dot(self.V, AuvInvZ))
+
+        print np.linalg.norm(AAinvZ - self.Z)
+
+        self.assertTrue(np.allclose(AAinvZ, self.Z, atol=1e-2, rtol=1e-5))
+
     def test_smw_formula_complex(self):
         """check the use of the smw formula
 
@@ -115,7 +129,7 @@ class TestLinalgUtils(unittest.TestCase):
     def test_solve_proj_sadpnt_smw(self):
         """check the sadpnt solver"""
 
-        umat, vmat, k, n = self.U, self.V, self.k, self.n
+        umat, vmat, k, = self.U, self.V, self.k
 
         # self.Jt = self.J.T
         # check the formula
@@ -139,7 +153,7 @@ class TestLinalgUtils(unittest.TestCase):
     def test_sadpnt_smw(self):
         """check the sadpnt as projection"""
 
-        umat, vmat, k, n = self.U, self.V, self.k, self.n
+        n = self.n
 
         # check whether it is a projection
         AuvInvZ = lau.solve_sadpnt_smw(amat=self.A, jmat=self.J, rhsv=self.Z,
