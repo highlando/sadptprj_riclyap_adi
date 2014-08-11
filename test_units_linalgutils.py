@@ -58,13 +58,14 @@ class TestLinalgUtils(unittest.TestCase):
         """
 
         AuvInvZ = lau.app_smw_inv(self.A, umat=self.U, vmat=self.V,
-                                  rhsa=self.Z, krylov=True)
+                                  rhsa=self.Z,
+                                  krylov=True, krpsolvprms={'tol': 1e-9})
         AAinvZ = self.A * AuvInvZ - np.dot(self.U,
                                            np.dot(self.V, AuvInvZ))
 
         print np.linalg.norm(AAinvZ - self.Z)
 
-        self.assertTrue(np.allclose(AAinvZ, self.Z, atol=1e-2, rtol=1e-5))
+        self.assertTrue(np.allclose(AAinvZ, self.Z))
 
     def test_smw_formula_complex(self):
         """check the use of the smw formula
@@ -221,5 +222,5 @@ class TestLinalgUtils(unittest.TestCase):
         self.assertTrue(np.allclose(norm_z, frob_z ** 2))
 
 
-suite = unittest.TestLoader().loadTestsFromTestCase(TestLinalgUtils)
-unittest.TextTestRunner(verbosity=2).run(suite)
+# suite = unittest.TestLoader().loadTestsFromTestCase(TestLinalgUtils)
+# unittest.TextTestRunner(verbosity=2).run(suite)

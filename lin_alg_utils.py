@@ -329,7 +329,7 @@ def app_luinv_to_spmat(alu_solve, Z):
 
 def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
                 savefactoredby=5, return_alu=False, alu=None,
-                krylov=None, krpprms=None):
+                krylov=None, krpsolvprms={}, krplsprms={}):
     """compute the sherman morrison woodbury inverse
 
     of `A - np.dot(U,V)` applied to an (array)rhs.
@@ -353,14 +353,18 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
         `lu` factorization of amat
     krylov : {None, 'gmres'}, optional
         whether or not to use an iterative solver, defaults to `None`
-    krpprms : dictionary, optional
+    krpsolvprms : dictionary, optional
         to specify parameters of the linear solver for use in Krypy, e.g.,
 
           * initial guess
+          * tolerance
           * number of iterations
-          * preconditioning
 
         defaults to `None`
+    krplsprms : dictionary, optional
+        parameters to define the linear system like
+
+          *preconditioner
 
     Returns
     -------
@@ -383,8 +387,9 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
         auvirhs = []
         for rhscol in range(rhsa.shape[1]):
             crhs = rhsa[:, rhscol]
-            krplinsys = kls.LinearSystem(A=auvblo, b=crhs)
-            auvirhs.append((kls.Gmres(krplinsys)).xk)
+            krplinsys = kls.LinearSystem(A=auvblo, b=crhs, **krplsprms)
+            solinst = kls.Gmres(krplinsys, **krpsolvprms)
+            auvirhs.append(solinst.xk)
 
         return np.asarray(auvirhs)[:, :, 0].T
 
