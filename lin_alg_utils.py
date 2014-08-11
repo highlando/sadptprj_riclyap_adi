@@ -146,15 +146,13 @@ def solve_sadpnt_smw(amat=None, jmat=None, rhsv=None,
     else:
         umate, vmate = None, None
 
-    if return_alu:
+    if return_alu and not krylov:
         return app_smw_inv(mata, umat=umate, vmat=vmate, rhsa=rhs,
-                           return_alu=True,
-                           krylov=None, krpslvprms=krpslvprms,
-                           krplsprms=krplsprms)
+                           return_alu=True)
 
     else:
         return app_smw_inv(mata, umat=umate, vmat=vmate, rhsa=rhs,
-                           krylov=None, krpslvprms=krpslvprms,
+                           krylov=krylov, krpslvprms=krpslvprms,
                            krplsprms=krplsprms)
 
 
@@ -370,7 +368,7 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
     krplsprms : dictionary, optional
         parameters to define the linear system like
 
-          *preconditioner
+          * preconditioner
 
     Returns
     -------

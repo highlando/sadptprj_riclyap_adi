@@ -88,7 +88,7 @@ class TestLinalgUtils(unittest.TestCase):
         self.assertTrue(np.allclose(AAinvZ, self.Z))
 
     def test_smw_formula_spv(self):
-        """check the use of the smw formula
+        """check the use of the smw formula with sparse v
 
         for the inverse of A-UV with v sparse"""
 
