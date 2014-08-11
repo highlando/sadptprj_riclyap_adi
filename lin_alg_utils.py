@@ -81,7 +81,8 @@ def app_prj_via_sadpnt(amat=None, jmat=None, rhsv=None,
 def solve_sadpnt_smw(amat=None, jmat=None, rhsv=None,
                      jmatT=None, umat=None, vmat=None,
                      rhsp=None, sadlu=None,
-                     return_alu=False):
+                     return_alu=False,
+                     krylov=None, krpslvprms={}, krplsprms={}):
     """solve a saddle point system
 
     A - np.dot(U,V)    J.T  *  X   =   rhsv
@@ -147,9 +148,14 @@ def solve_sadpnt_smw(amat=None, jmat=None, rhsv=None,
 
     if return_alu:
         return app_smw_inv(mata, umat=umate, vmat=vmate, rhsa=rhs,
-                           return_alu=True)
+                           return_alu=True,
+                           krylov=None, krpslvprms=krpslvprms,
+                           krplsprms=krplsprms)
+
     else:
-        return app_smw_inv(mata, umat=umate, vmat=vmate, rhsa=rhs)
+        return app_smw_inv(mata, umat=umate, vmat=vmate, rhsa=rhs,
+                           krylov=None, krpslvprms=krpslvprms,
+                           krplsprms=krplsprms)
 
 
 def apply_massinv(M, rhsa, output=None):
@@ -329,7 +335,7 @@ def app_luinv_to_spmat(alu_solve, Z):
 
 def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
                 savefactoredby=5, return_alu=False, alu=None,
-                krylov=None, krpsolvprms={}, krplsprms={}):
+                krylov=None, krpslvprms={}, krplsprms={}):
     """compute the sherman morrison woodbury inverse
 
     of `A - np.dot(U,V)` applied to an (array)rhs.
@@ -388,7 +394,7 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
         for rhscol in range(rhsa.shape[1]):
             crhs = rhsa[:, rhscol]
             krplinsys = kls.LinearSystem(A=auvblo, b=crhs, **krplsprms)
-            solinst = kls.Gmres(krplinsys, **krpsolvprms)
+            solinst = kls.Gmres(krplinsys, **krpslvprms)
             auvirhs.append(solinst.xk)
 
         return np.asarray(auvirhs)[:, :, 0].T

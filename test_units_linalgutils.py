@@ -23,6 +23,7 @@ class TestLinalgUtils(unittest.TestCase):
         self.Jt = sps.rand(self.n, self.k)
         self.M = sps.eye(self.n)
         self.Aspd = self.A + self.A.T
+        self.krpslvprms = {'tol': 1e-9}
 
     def test_app_massinv(self):
         """check in particular the sparse branch
@@ -59,7 +60,7 @@ class TestLinalgUtils(unittest.TestCase):
 
         AuvInvZ = lau.app_smw_inv(self.A, umat=self.U, vmat=self.V,
                                   rhsa=self.Z,
-                                  krylov=True, krpsolvprms={'tol': 1e-9})
+                                  krylov=True, krpslvprms=self.krpslvprms)
         AAinvZ = self.A * AuvInvZ - np.dot(self.U,
                                            np.dot(self.V, AuvInvZ))
 
@@ -127,7 +128,33 @@ class TestLinalgUtils(unittest.TestCase):
 
         self.assertTrue(np.allclose(Z.todense(), self.A * AinvZ))
 
-    def test_solve_proj_sadpnt_smw(self):
+    def test_sadpnt_smw_krypy(self):
+        """check the sadpnt solver with krypy"""
+
+        umat, vmat, k, = self.U, self.V, self.k
+
+        # self.Jt = self.J.T
+        # check the formula
+        AuvInvZ = lau.solve_sadpnt_smw(amat=self.A, jmat=self.J, rhsv=self.Z,
+                                       jmatT=self.Jt, umat=self.U, vmat=self.V,
+                                       krylov=True, krpslvprms=self.krpslvprms)
+
+        sysm1 = sps.hstack([self.A, self.Jt], format='csr')
+        sysm2 = sps.hstack([self.J, sps.csr_matrix((k, k))], format='csr')
+        mata = sps.vstack([sysm1, sysm2], format='csr')
+
+        umate = np.vstack([umat, np.zeros((k, umat.shape[1]))])
+        vmate = np.hstack([vmat, np.zeros((vmat.shape[0], k))])
+        ze = np.vstack([self.Z, np.zeros((k, self.Z.shape[1]))])
+
+        AAinvZ = mata * AuvInvZ - np.dot(umate, np.dot(vmate, AuvInvZ))
+
+        # likely to fail because of ill conditioned rand mats
+        print np.linalg.norm(AAinvZ - ze)
+        self.assertTrue(np.allclose(AAinvZ, ze),
+                        msg='likely to fail because of ill cond')
+
+    def test_sadpnt_smw(self):
         """check the sadpnt solver"""
 
         umat, vmat, k, = self.U, self.V, self.k
@@ -151,7 +178,7 @@ class TestLinalgUtils(unittest.TestCase):
         self.assertTrue(np.allclose(AAinvZ, ze),
                         msg='likely to fail because of ill cond')
 
-    def test_sadpnt_smw(self):
+    def test_solve_proj_sadpnt_smw(self):
         """check the sadpnt as projection"""
 
         n = self.n
