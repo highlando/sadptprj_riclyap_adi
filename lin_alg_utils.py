@@ -252,7 +252,10 @@ def apply_invsqrt_fromright(M, rhsa, output=None):
         the sqrt of the inverse of `M` applied to `rhsa` from the left
 
     """
-    Z = scipy.linalg.cholesky(M.todense())
+    try:
+        Z = scipy.linalg.cholesky(M.todense())
+    except AttributeError:
+        Z = scipy.linalg.cholesky(M)
     # R = Z.T*Z  <-> R^-1 = Z^-1*Z.-T
     if output == 'sparse':
         return sps.csc_matrix(rhsa * np.linalg.inv(Z.T))
@@ -357,7 +360,7 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
         `lu` factorization of amat
     krylov : {None, 'gmres'}, optional
         whether or not to use an iterative solver, defaults to `None`
-    krpsolvprms : dictionary, optional
+    krpslvprms : dictionary, optional
         to specify parameters of the linear solver for use in Krypy, e.g.,
 
           * initial guess
