@@ -363,9 +363,10 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
     krpslvprms : dictionary, optional
         to specify parameters of the linear solver for use in Krypy, e.g.,
 
-          * initial guess
+          * 'x0', nparray: initial guess
           * tolerance
-          * number of iterations
+          * max number of iterations
+          * 'convstatsl', list: for convergence statistics
 
         defaults to `None`
     krplsprms : dictionary, optional
@@ -392,11 +393,22 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
                                       dtype='float64')
 
         auvirhs = []
-        for rhscol in range(rhsa.shape[1]):
-            crhs = rhsa[:, rhscol]
-            krplinsys = kls.LinearSystem(A=auvblo, b=crhs, **krplsprms)
-            solinst = kls.Gmres(krplinsys, **krpslvprms)
-            auvirhs.append(solinst.xk)
+        try:
+            itcl = krpslvprms['convstatsl']
+            citcl = []
+            for rhscol in range(rhsa.shape[1]):
+                crhs = rhsa[:, rhscol]
+                krplinsys = kls.LinearSystem(A=auvblo, b=crhs, **krplsprms)
+                solinst = kls.Gmres(krplinsys, **krpslvprms)
+                auvirhs.append(solinst.xk)
+                citcl.append(solinst)
+            itcl.append(solinst)
+        except KeyError:
+            for rhscol in range(rhsa.shape[1]):
+                crhs = rhsa[:, rhscol]
+                krplinsys = kls.LinearSystem(A=auvblo, b=crhs, **krplsprms)
+                solinst = kls.Gmres(krplinsys, **krpslvprms)
+                auvirhs.append(solinst.xk)
 
         return np.asarray(auvirhs)[:, :, 0].T
 
