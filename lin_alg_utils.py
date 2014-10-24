@@ -394,15 +394,15 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
 
         auvirhs = []
         try:
-            itcl = krpslvprms['convstatsl']
             citcl = []
             for rhscol in range(rhsa.shape[1]):
                 crhs = rhsa[:, rhscol]
                 krplinsys = kls.LinearSystem(A=auvblo, b=crhs, **krplsprms)
                 solinst = kls.Gmres(krplinsys, **krpslvprms)
                 auvirhs.append(solinst.xk)
-                citcl.append(solinst)
-            itcl.append(solinst)
+                # solinst.xk = None  # strip off solution vector for stats
+                citcl.append(solinst.resnorms)
+            krpslvprms['convstatsl'].append(citcl)
         except KeyError:
             for rhscol in range(rhsa.shape[1]):
                 crhs = rhsa[:, rhscol]
