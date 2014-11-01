@@ -273,11 +273,10 @@ def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
         wmat = np.array(wmat.todense())
 
     znc = z0
-    nwtn_stp, upd_fnorm, upd_fnorm_n = 0, 2, 1
+    nwtn_stp, upd_fnorm, upd_fnorm_n = 0, None, None
     nwtn_upd_fnorms = []
 
-    while nwtn_stp < nwtn_adi_dict['nwtn_max_steps'] and \
-            upd_fnorm > nwtn_adi_dict['nwtn_upd_reltol']:
+    while nwtn_stp < nwtn_adi_dict['nwtn_max_steps']:
 
         if znc is None:  # i.e., if z0 was None
             rhsadi = wmat
@@ -324,17 +323,20 @@ def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
                 upd_fnorm_n = np.sqrt(np.abs(upd_fnorm) / np.abs(nzn))
 
         nwtn_upd_fnorms.append(upd_fnorm_n)
-        if np.allclose(upd_fnorm_n, upd_fnorm):
-            print 'no more change in the norm of the update... break'
-            break
-        elif nwtn_adi_dict['full_upd_norm_check']:
+        try:
+            if np.allclose(upd_fnorm_n, upd_fnorm):
+                print 'no more change in the norm of the update... break'
+                break
+        except TypeError:
+            pass
+        if nwtn_adi_dict['full_upd_norm_check']:
             upd_fnorm = upd_fnorm_n
         elif (vecn2 + vecn1)/vecn3 < 8e-9:
             upd_fnorm = upd_fnorm_n
 
         try:
             if nwtn_adi_dict['verbose']:
-                print ('Newton ADI step: {1} --' +
+                print ('Newton ADI step: {1} -- ' +
                        'rel f norm of update: {0}').format(upd_fnorm,
                                                            nwtn_stp + 1)
                 if not nwtn_adi_dict['full_upd_norm_check']:
@@ -348,6 +350,9 @@ def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
 
         znc = znn
         nwtn_stp += 1
+        if (upd_fnorm is not None
+                and upd_fnorm < nwtn_adi_dict['nwtn_upd_reltol']):
+            break
 
     return dict(zfac=znn, nwtn_upd_fnorms=nwtn_upd_fnorms)
 
