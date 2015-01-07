@@ -536,6 +536,7 @@ def comp_uvz_spdns(umat, vmat, zmat):
 
 
 def mm_dnssps(A, v):
+    """compute A*v for sparse or dense A"""
     if sps.isspmatrix(A) or sps.isspmatrix(v):
         return A*v
     else:
