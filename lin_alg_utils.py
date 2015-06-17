@@ -3,6 +3,17 @@ import scipy
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsla
 
+__all__ = ['app_prj_via_sadpnt',
+           'apply_sqrt_fromright',
+           'apply_invsqrt_fromright',
+           'get_Sinv_smw',
+           'solve_sadpnt_smw',
+           'app_luinv_to_spmat',
+           'comp_sqfnrm_factrd_diff',
+           'comp_sqfnrm_factrd_lyap_res',
+           'comp_sqfnrm_factrd_sum',
+           'mm_dnssps']
+
 
 def app_prj_via_sadpnt(amat=None, jmat=None, rhsv=None,
                        jmatT=None, umat=None, vmat=None,
