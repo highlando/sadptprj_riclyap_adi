@@ -169,15 +169,15 @@ class TestProjLyap(unittest.TestCase):
         Z = pru.proj_alg_ric_newtonadi(mmat=self.M, amat=self.F,
                                        jmat=self.J, bmat=self.bmat,
                                        wmat=self.W, z0=self.bmat,
-                                       nwtn_adi_dict=
-                                       self.nwtn_adi_dict)['zfac']
+                                       nwtn_adi_dict=self.
+                                       nwtn_adi_dict)['zfac']
 
         # for '0' initial value --> z0 = None
         Z0 = pru.proj_alg_ric_newtonadi(mmat=self.M, amat=self.F,
                                         jmat=self.J, bmat=self.bmat,
                                         wmat=self.W,
-                                        nwtn_adi_dict=
-                                        self.nwtn_adi_dict)['zfac']
+                                        nwtn_adi_dict=self.
+                                        nwtn_adi_dict)['zfac']
 
         MtXM = self.M.T * np.dot(Z, Z.T) * self.M
         MtX0M = self.M.T * np.dot(Z0, Z0.T) * self.M
@@ -209,8 +209,8 @@ class TestProjLyap(unittest.TestCase):
         Z = pru.proj_alg_ric_newtonadi(mmat=self.M, amat=self.F,
                                        jmat=self.J, bmat=self.bmat,
                                        wmat=self.W, z0=self.bmat,
-                                       nwtn_adi_dict=
-                                       self.nwtn_adi_dict)['zfac']
+                                       nwtn_adi_dict=self.
+                                       nwtn_adi_dict)['zfac']
 
         Zred = pru.compress_Zsvd(Z, thresh=self.comprthresh)
 
