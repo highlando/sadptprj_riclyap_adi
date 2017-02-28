@@ -102,7 +102,6 @@ class TestProjLyap(unittest.TestCase):
         self.assertTrue(np.linalg.norm(ProjRes) / np.linalg.norm(MtXM)
                         < 1e-8)
 
-    @unittest.skip('lets concentrate on the lyap.T ')
     def test_proj_lyap_sol_pymess(self):
         """check the solution of the projected lyap eqn
 
@@ -158,10 +157,11 @@ class TestProjLyap(unittest.TestCase):
         delta = -0.02
 
         A = self.F
+        AUS = self.F - self.uvssp
         Pi = self.P
 
         lyapeq = pymess.equation_lyap_dae2(optns, self.M, A, self.J.T,
-                                           self.W.T, delta, None)  # self.V)
+                                           self.bmat, delta, self.V)
 
         Z, status = pymess.lradi(lyapeq, optns)
         # solves `(\Pi A)^T X  M  +  M^T  X  (\Pi A) &=& -(C\Pi^T )^T(C\Pi^T )`
@@ -171,7 +171,7 @@ class TestProjLyap(unittest.TestCase):
         # TEST: result is 'projected'
         self.assertTrue(np.allclose(MXMt, np.dot(Pi.T, np.dot(MXMt, Pi))))
 
-        PitAtXM = np.dot(Pi.T, A.T*X*self.M)
+        PitAtXM = np.dot(Pi.T, AUS.T*X*self.M)
         # FtXM = (-self.F - 0*self.uvs).T * np.dot(Z, Z.T) * self.M
 
         PitW = np.dot(Pi.T, self.W)
