@@ -157,11 +157,11 @@ class TestProjLyap(unittest.TestCase):
         delta = -0.02
 
         A = self.F
-        AUS = self.F - self.uvssp
+        AUS = self.F - self.uvssp.T
         Pi = self.P
 
         lyapeq = pymess.equation_lyap_dae2(optns, self.M, A, self.J.T,
-                                           self.bmat, delta, self.V)
+                                           self.bmat.T, delta, self.V.T)
 
         Z, status = pymess.lradi(lyapeq, optns)
         # solves `(\Pi A)^T X  M  +  M^T  X  (\Pi A) &=& -(C\Pi^T )^T(C\Pi^T )`
@@ -174,7 +174,7 @@ class TestProjLyap(unittest.TestCase):
         PitAtXM = np.dot(Pi.T, AUS.T*X*self.M)
         # FtXM = (-self.F - 0*self.uvs).T * np.dot(Z, Z.T) * self.M
 
-        PitW = np.dot(Pi.T, self.W)
+        PitW = np.dot(Pi.T, self.bmat)
 
         ProjRes = PitAtXM + PitAtXM.T + np.dot(PitW, PitW.T)
 
