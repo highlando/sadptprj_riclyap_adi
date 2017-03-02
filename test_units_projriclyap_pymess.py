@@ -17,11 +17,11 @@ class TestProjLyap(unittest.TestCase):
         self.NP = 80
         self.NY = 5
         self.NU = self.NY+3
-        self.verbose = False
+        self.verbose = True
         self.comprthresh = 1e-6  # threshhold for SVD trunc. for compr. of Z
 
-        self.nwtn_adi_dict = dict(adi_max_steps=300,
-                                  adi_newZ_reltol=1e-11,
+        self.nwtn_adi_dict = dict(adi_max_steps=150,
+                                  adi_newZ_reltol=1e-8,
                                   nwtn_max_steps=24,
                                   nwtn_upd_reltol=4e-7,
                                   nwtn_upd_abstol=4e-7,
@@ -30,9 +30,9 @@ class TestProjLyap(unittest.TestCase):
 
         # -F, M spd -- coefficient matrices
         self.F = -sps.eye(self.NV) + 1e-5*sps.rand(self.NV, self.NV)
-        # self.M = sps.eye(self.NV, format='csr')
-        self.M = sps.diags([-1, 3, -1], [-1, 0, 1],
-                           shape=(self.NV, self.NV), format='csr')
+        self.M = sps.eye(self.NV, format='csr')
+        # self.M = sps.diags([-1, 3, -1], [-1, 0, 1],
+        #                    shape=(self.NV, self.NV), format='csr')
         try:
             self.Mlu = spsla.factorized(self.M.tocsc())
         except RuntimeError:
@@ -102,6 +102,7 @@ class TestProjLyap(unittest.TestCase):
         self.assertTrue(np.linalg.norm(ProjRes) / np.linalg.norm(MtXM)
                         < 1e-8)
 
+    @unittest.skip('lets concentrate on the lyap ')
     def test_proj_lyap_sol_pymess(self):
         """check the solution of the projected lyap eqn
 
@@ -142,6 +143,7 @@ class TestProjLyap(unittest.TestCase):
         self.assertTrue(np.linalg.norm(ProjRes) / np.linalg.norm(MtXM)
                         < 1e-8)
 
+    @unittest.skip('lets concentrate on the lyap ')
     def test_proj_lyap_sol_pymess_trnsp(self):
         """check the solution of the transposed projected lyap eqn
 
@@ -157,7 +159,7 @@ class TestProjLyap(unittest.TestCase):
         delta = -0.02
 
         A = self.F
-        AUS = self.F - self.uvssp.T
+        AUS = self.F - self.uvssp.T  # Note the transpose
         Pi = self.P
 
         lyapeq = pymess.equation_lyap_dae2(optns, self.M, A, self.J.T,
@@ -211,7 +213,7 @@ class TestProjLyap(unittest.TestCase):
         self.assertTrue(np.linalg.norm(ProjRes) / np.linalg.norm(MtXM)
                         < 1e-8)
 
-    @unittest.skip('lets concentrate on the lyap ')
+    @unittest.skip('lets concentrate on the Ric ')
     def test_proj_lyap_smw_transposeflag(self):
         """check the solution of the projected lyap eqn
 
@@ -246,28 +248,93 @@ class TestProjLyap(unittest.TestCase):
         self.assertTrue(np.allclose(Z3, Z4))
         self.assertTrue(np.allclose(Z, Z4))
 
-    @unittest.skip('lets concentrate on the lyap ')
-    def test_proj_alg_ric_sol(self):
+    def test_proj_alg_ric_sol_pymess(self):
         """check the sol of the projected alg. Riccati Eqn
 
-        via Newton ADI"""
+        via Newton ADI in pymess"""
+        import pymess
+
+        optns = pymess.options()
+        optns.adi.res2_tol = 5e-8
+        optns.adi.output = 0
+        optns.nm.output = 0
+        optns.adi.shifts.paratype = pymess.MESS_LRCFADI_PARA_ADAPTIVE_V
+        delta = -0.02
+
+        # optns.nm.K0 = None  # initial stabilizing feedback
+
+        # for the default options, the observ. Riccati Equation is solved
+        F, B, C = self.F.T, self.W, self.bmat.T
+        ricceq = pymess.equation_riccati_dae2(optns, self.M, F, self.J.T,
+                                              B, C, delta)
+
+        Z, status = pymess.lrnm(ricceq, optns)
+        # Z = pru.proj_alg_ric_newtonadi(mmat=self.M, amat=F,
+        #                                jmat=self.J, bmat=B,
+        #                                wmat=self.W,
+        #                                nwtn_adi_dict=self.
+        #                                nwtn_adi_dict)['zfac']
+
+        # TEST: check projected residual - riccati sol
+        FtXM = np.dot(self.F.T * Z, Z.T * self.M)
+        PiFtXM = np.dot(self.P.T, FtXM)
+        PtW = np.dot(self.P.T, self.W)
+        MtXb = np.dot(self.M.T*Z, np.dot(Z.T, self.bmat))
+
+        ProjRes = PiFtXM + PiFtXM.T - np.dot(MtXb, MtXb.T) + np.dot(PtW, PtW.T)
+
+        MtXM = self.M.T * np.dot(Z, Z.T) * self.M
+        self.assertTrue(np.linalg.norm(ProjRes) / np.linalg.norm(MtXM)
+                        < 1e-7)
+# TEST: result is 'projected' - riccati sol
+        self.assertTrue(np.allclose(MtXM,
+                                    np.dot(self.P.T, np.dot(MtXM, self.P))))
+
+        # with the transpose option, the observ. Riccati Equation is solved
+        optns.type = pymess.MESS_OP_TRANSPOSE
+        F, B, C = self.F, self.bmat, self.W.T
+        ricceq = pymess.equation_riccati_dae2(optns, self.M, F, self.J.T,
+                                              B, C, delta)
+
+        FtXM = np.dot(self.F.T * Z, Z.T * self.M)
+        PiFtXM = np.dot(self.P.T, FtXM)
+        PtW = np.dot(self.P.T, self.W)
+        MtXb = np.dot(self.M.T*Z, np.dot(Z.T, self.bmat))
+
+        ProjRes = PiFtXM + PiFtXM.T - np.dot(MtXb, MtXb.T) + np.dot(PtW, PtW.T)
+
+        self.assertTrue(np.linalg.norm(ProjRes) / np.linalg.norm(MtXM)
+                        < 1e-7)
+
+        self.assertTrue(np.allclose(MtXM,
+                                    np.dot(self.P.T, np.dot(MtXM, self.P))))
+
+    def test_proj_alg_ric_myvspy_mess(self):
+        """check the sol of the projected alg. Riccati Eqn
+
+        via Newton ADI  -- pymess vs. my mess"""
+        # Z = pru.proj_alg_ric_newtonadi(mmat=self.M, amat=self.F,
+        #                                jmat=self.J, bmat=self.bmat,
+        #                                wmat=self.W, z0=self.bmat,
+        #                                nwtn_adi_dict=self.
+        #                                nwtn_adi_dict)['zfac']
+
+        Zpm = pru.\
+            pymess_dae2_cnt_riccati(mmat=self.M, amat=self.F,
+                                    jmat=self.J, bmat=self.bmat,
+                                    wmat=self.W, z0=self.bmat)['zfac']
+
+        # for '0' initial value --> z0 = None
         Z = pru.proj_alg_ric_newtonadi(mmat=self.M, amat=self.F,
                                        jmat=self.J, bmat=self.bmat,
-                                       wmat=self.W, z0=self.bmat,
+                                       wmat=self.W,
                                        nwtn_adi_dict=self.
                                        nwtn_adi_dict)['zfac']
 
-        # for '0' initial value --> z0 = None
-        Z0 = pru.proj_alg_ric_newtonadi(mmat=self.M, amat=self.F,
-                                        jmat=self.J, bmat=self.bmat,
-                                        wmat=self.W,
-                                        nwtn_adi_dict=self.
-                                        nwtn_adi_dict)['zfac']
-
         MtXM = self.M.T * np.dot(Z, Z.T) * self.M
-        MtX0M = self.M.T * np.dot(Z0, Z0.T) * self.M
+        MtXpmM = self.M.T * np.dot(Zpm, Zpm.T) * self.M
 
-        self.assertTrue(np.allclose(MtXM, MtX0M))
+        self.assertTrue(np.allclose(MtXM, MtXpmM))
 
         MtXb = self.M.T * np.dot(np.dot(Z, Z.T), self.bmat)
 

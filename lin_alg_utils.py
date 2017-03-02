@@ -529,17 +529,32 @@ def comp_sqfnrm_factrd_lyap_res(A, B, C):
         (ctc * ctc).sum(-1).sum()
 
 
-def comp_uvz_spdns(umat, vmat, zmat):
-    """comp u*v*z for sparse or dense u or v"""
+def comp_uvz_spdns(umat, vmat, zmat, startright=False):
+    """comp u*[v*z] (default) or [u*v]*z for sparse or dense u or v
 
-    if sps.isspmatrix(vmat):
-        vz = vmat * zmat
+    `if startright` we compute [u*v]*z
+    """
+
+    if startright:
+        return mm_dnssps(mm_dnssps(umat, vmat), zmat)
+        # if sps.isspmatrix(vmat) or sps.isspmatrix(zmat):
+        #     vz = vmat * zmat
+        # else:
+        #     vz = np.dot(vmat, zmat)
+        # if sps.isspmatrix(umat):
+        #     return umat * vz
+        # else:
+        #     return np.dot(umat, vz)
     else:
-        vz = np.dot(vmat, zmat)
-    if sps.isspmatrix(umat):
-        return umat * vz
-    else:
-        return np.dot(umat, vz)
+        return mm_dnssps(umat, mm_dnssps(vmat, zmat))
+        # if sps.isspmatrix(umat) or sps.isspmatrix(vmat):
+        #     uv = umat * vmat
+        # else:
+        #     uv = np.dot(umat, vmat)
+        # if sps.isspmatrix(zmat):
+        #     return uv * zmat
+        # else:
+        #     return np.dot(umat, vz)
 
 
 def mm_dnssps(A, v):

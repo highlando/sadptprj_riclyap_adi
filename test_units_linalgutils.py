@@ -248,6 +248,13 @@ class TestLinalgUtils(unittest.TestCase):
         self.assertTrue(np.allclose(norm_u, frob_u ** 2))
         self.assertTrue(np.allclose(norm_z, frob_z ** 2))
 
+    def test_spsdns_multiplication(self):
+        """check the sparse/dense multiplication helpers"""
+        uvsl = lau.comp_uvz_spdns(self.U, self.Vsp, self.Z)
+        uvsr = lau.comp_uvz_spdns(self.U, self.Vsp, self.Z, startright=True)
+        uvs = np.dot(self.U*self.Vsp, self.Z)
+        self.assertTrue(np.allclose(uvsl, uvsr))
+        self.assertTrue(np.allclose(uvsl, uvs))
 
 # suite = unittest.TestLoader().loadTestsFromTestCase(TestLinalgUtils)
 # unittest.TextTestRunner(verbosity=2).run(suite)
