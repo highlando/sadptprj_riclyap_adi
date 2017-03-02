@@ -269,7 +269,7 @@ def pymess_dae2_cnt_riccati(mmat=None, amat=None, jmat=None,
     delta = -0.02
 
     if z0 is not None:
-        mtxoldb = mmat.T*lau.comp_uvz_spdns(z0, z0.T, bmat, startright=True)
+        mtxoldb = mmat.T*lau.comp_uvz_spdns(z0, z0.T, bmat)
     optns.nm.K0 = mtxoldb.T  # initial stabilizing feedback
 
     ricceq = pymess.equation_riccati_dae2(optns, mmat, amat, jmat.T,
