@@ -5,6 +5,12 @@ import scipy.sparse.linalg as spsla
 import lin_alg_utils as lau
 
 
+__all__ = ['pymess_dae2_cnt_riccati',
+           'comp_proj_lyap_res_norm',
+           'solve_proj_lyap_stein',
+           'proj_alg_ric_newtonadi']
+
+
 def solve_stst_feedbacknthrough(amat=None, mmat=None, jmat=None,
                                 bmat=None, cmat=None,
                                 fv=None, fl=None, fg=None, fl2=None,
@@ -241,7 +247,8 @@ def get_mTzzTtb(MT, Z, tB, output=None):
 
 def pymess_dae2_cnt_riccati(mmat=None, amat=None, jmat=None,
                             bmat=None, wmat=None, z0=None, mtxoldb=None,
-                            transposed=False, **kw):
+                            transposed=False, aditol=5e-10, nwtn_res2_tol=5e-8,
+                            maxit=20, verbose=False, linesearch=False, **kw):
     """ solve the projected algebraic ricc via newton adi
 
     `M.T*X*A + A.T*X*M - M.T*X*B*B.T*X*M + J(Y) = -WW.T`
@@ -261,16 +268,22 @@ def pymess_dae2_cnt_riccati(mmat=None, amat=None, jmat=None,
     import pymess
 
     optns = pymess.options()
-    optns.adi.res2_tol = 5e-8
+    optns.adi.res2_tol = aditol
     optns.adi.output = 0
-    optns.nm.output = 0
+    if verbose:
+        optns.nm.output = 1
+    if linesearch:
+        optns.nm.linesearch = 1
+    optns.nm.maxit = maxit
+    optns.nm.res2_tol = nwtn_res2_tol
     optns.adi.shifts.paratype = pymess.MESS_LRCFADI_PARA_ADAPTIVE_V
     optns.type = pymess.MESS_OP_TRANSPOSE  # solve the cont Riccati!!!
     delta = -0.02
 
     if z0 is not None:
         mtxoldb = mmat.T*lau.comp_uvz_spdns(z0, z0.T, bmat)
-    optns.nm.K0 = mtxoldb.T  # initial stabilizing feedback
+    if mtxoldb is not None:
+        optns.nm.K0 = mtxoldb.T  # initial stabilizing feedback
 
     ricceq = pymess.equation_riccati_dae2(optns, mmat, amat, jmat.T,
                                           bmat, wmat.T, delta)
@@ -403,7 +416,7 @@ def comp_proj_lyap_res_norm(Z, amat=None, mmat=None, wmat=None,
                             jmat=None, umat=None, vmat=None, Sinv=None):
     """compute the squared f norm of projected lyap residual
 
-        res = Pt*[ Ft*ZZt*M + Mt*ZZt*M + W*Wt ]*P
+        res = Pt*[ Ft*ZZt*M + Mt*ZZt*F + W*Wt ]*P
 
     """
     if Z.shape[1] >= Z.shape[0]:

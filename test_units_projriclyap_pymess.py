@@ -248,6 +248,7 @@ class TestProjLyap(unittest.TestCase):
         self.assertTrue(np.allclose(Z3, Z4))
         self.assertTrue(np.allclose(Z, Z4))
 
+    @unittest.skip('lets concentrate on the lyap ')
     def test_proj_alg_ric_sol_pymess(self):
         """check the sol of the projected alg. Riccati Eqn
 
@@ -322,7 +323,8 @@ class TestProjLyap(unittest.TestCase):
         Zpm = pru.\
             pymess_dae2_cnt_riccati(mmat=self.M, amat=self.F,
                                     jmat=self.J, bmat=self.bmat,
-                                    wmat=self.W, z0=self.bmat)['zfac']
+                                    wmat=self.W, z0=self.bmat,
+                                    maxit=5, verbose=True)['zfac']
 
         # for '0' initial value --> z0 = None
         Z = pru.proj_alg_ric_newtonadi(mmat=self.M, amat=self.F,
