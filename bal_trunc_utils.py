@@ -40,7 +40,7 @@ def compute_lrbt_transfos(zfc=None, zfo=None, mmat=None,
     tl = np.dot(zfc, lsvk*svsqri_mat)
     tr = np.dot(zfo, rsvk*svsqri_mat)
 
-    return tl, tr
+    return tl, tr, sv
 
 
 def compare_freqresp(mmat=None, amat=None, jmat=None, bmat=None,
@@ -222,7 +222,7 @@ def plot_step_resp(str_to_json=None, tmesh=None,
     else:
         str_to_json = 'notspecified'
 
-    redinds = range(0, len(tmesh), compress)
+    redinds = list(range(0, len(tmesh), compress))
     redina = np.array(redinds)
 
     for ccol in range(len(red_stp_rsp)):
@@ -249,5 +249,5 @@ def plot_step_resp(str_to_json=None, tmesh=None,
                   figureheight='\\figureheight',
                   figurewidth='\\figurewidth'
                   )
-        print 'saved to ' + str_to_json + '{0}'.format(200+ccol) + '.tikz'
+        print('saved to ' + str_to_json + '{0}'.format(200+ccol) + '.tikz')
         fig.show()
