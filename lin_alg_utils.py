@@ -93,6 +93,8 @@ def solve_sadpnt_smw(amat=None, jmat=None, rhsv=None,
                      jmatT=None, umat=None, vmat=None,
                      rhsp=None, sadlu=None,
                      return_alu=False,
+                     decouplevp=False, solve_A=None, symmetric=False,
+                     cgtol=1e-8,
                      krylov=None, krpslvprms={}, krplsprms={}):
     """solve a saddle point system
 
@@ -138,6 +140,28 @@ def solve_sadpnt_smw(amat=None, jmat=None, rhsv=None,
 
     if rhsp is None:
         rhsp = np.zeros((nnpp, rhsv.shape[1]))
+
+    # TODO --> that's pretty roughly implemented
+    if decouplevp:
+        if not symmetric:
+            raise NotImplementedError('non symmetric not implemented')
+        if solve_A is None:
+            raise NotImplementedError('need a routine that gives `A.-1*rhs`')
+
+        def _invJAinvJTp(p):
+            return jmat*solve_A(jmatT*p)
+
+        iJAiJT = spsla.LinearOperator((nnpp, nnpp), matvec=_invJAinvJTp,
+                                      dtype=np.float32)
+        import krypy
+        prhs = jmat*solve_A(rhsv) - rhsp
+        pls = krypy.linsys.LinearSystem(iJAiJT, prhs,  # M=TODO,
+                                        self_adjoint=True)
+        p = krypy.linsys.Cg(pls, tol=cgtol).xk
+        v = solve_A(rhsv - jmatT*p)
+
+        return np.vstack([v, p])
+    # <-- TODO
 
     if sadlu is None:
         sysm1 = sps.hstack([amat, jmatT], format='csr')
