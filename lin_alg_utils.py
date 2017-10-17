@@ -93,7 +93,8 @@ def solve_sadpnt_smw(amat=None, jmat=None, rhsv=None,
                      jmatT=None, umat=None, vmat=None,
                      rhsp=None, sadlu=None,
                      return_alu=False,
-                     decouplevp=False, solve_A=None, symmetric=False,
+                     decouplevp=False, solve_A=None,
+                     symmetric=False, posdefinite=False,
                      cgtol=1e-8,
                      krylov=None, krpslvprms={}, krplsprms={}):
     """solve a saddle point system
@@ -143,7 +144,7 @@ def solve_sadpnt_smw(amat=None, jmat=None, rhsv=None,
 
     # TODO --> that's pretty roughly implemented
     if decouplevp:
-        if not symmetric:
+        if not symmetric and posdefinite:
             raise NotImplementedError('non symmetric not implemented')
         if solve_A is None:
             raise NotImplementedError('need a routine that gives `A.-1*rhs`')
@@ -156,7 +157,8 @@ def solve_sadpnt_smw(amat=None, jmat=None, rhsv=None,
         import krypy
         prhs = jmat*solve_A(rhsv) - rhsp
         pls = krypy.linsys.LinearSystem(iJAiJT, prhs,  # M=TODO,
-                                        self_adjoint=True)
+                                        self_adjoint=True,
+                                        positive_definite=posdefinite)
         p = krypy.linsys.Cg(pls, tol=cgtol).xk
         v = solve_A(rhsv - jmatT*p)
 
