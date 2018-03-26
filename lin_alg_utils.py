@@ -573,6 +573,10 @@ def comp_uvz_spdns(umat, vmat, zmat):
 
 def mm_dnssps(A, v):
     """compute A*v for sparse or dense A"""
+    try:
+        return A.matvec(v)
+    except AttributeError:
+        pass
     if sps.isspmatrix(A) or sps.isspmatrix(v):
         return A*v
     else:
