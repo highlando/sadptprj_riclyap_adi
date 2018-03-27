@@ -4,9 +4,8 @@ import numpy as np
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsla
 
-from . import lin_alg_utils as lau
-
-from . import proj_ric_utils as pru
+import sadptprj_riclyap_adi.lin_alg_utils as lau
+import sadptprj_riclyap_adi.proj_ric_utils as pru
 # unittests for the helper functions
 
 
@@ -324,7 +323,7 @@ class TestProjLyap(unittest.TestCase):
             pymess_dae2_cnt_riccati(mmat=self.M, amat=self.F,
                                     jmat=self.J, bmat=self.bmat,
                                     wmat=self.W, z0=self.bmat,
-                                    maxit=5, verbose=True)['zfac']
+                                    maxit=15, verbose=True)['zfac']
 
         # for '0' initial value --> z0 = None
         Z = pru.proj_alg_ric_newtonadi(mmat=self.M, amat=self.F,
