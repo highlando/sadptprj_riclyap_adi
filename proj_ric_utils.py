@@ -2,7 +2,7 @@ import numpy as np
 import scipy.linalg as spla
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsla
-import lin_alg_utils as lau
+from . import lin_alg_utils as lau
 
 
 __all__ = ['pymess_dae2_cnt_riccati',
@@ -78,7 +78,7 @@ def solve_proj_lyap_stein(amat=None, jmat=None, wmat=None, mmat=None,
         ms = [-30.0, -20.0, -10.0, -5.0, -3.0, -1.0]
 
     if adi_dict['verbose']:
-        print ('\nAdishifts: {0} ').format(ms)
+        print(('\nAdishifts: {0} ').format(ms))
 
     NZ = wmat.shape[0]
 
@@ -178,18 +178,18 @@ def solve_proj_lyap_stein(amat=None, jmat=None, wmat=None, mmat=None,
                         comp_proj_lyap_res_norm(Z, amat=amat, mmat=mmat,
                                                 wmat=wmat, jmat=jmat,
                                                 umat=umat, vmat=vmat)
-                    print 'adistep ', adi_step
-                    print 'cur proj lyap res: ', np.sqrt(sqrdprolyares)
-                    print 'rel Z norm: \n', rel_newZ_norm
+                    print('adistep ', adi_step)
+                    print('cur proj lyap res: ', np.sqrt(sqrdprolyares))
+                    print('rel Z norm: \n', rel_newZ_norm)
             except KeyError:
                 pass  # no such option specified
 
         try:
             if adi_dict['verbose']:
-                print ('Number of ADI steps {0} -- \n' +
+                print(('Number of ADI steps {0} -- \n' +
                        'Relative norm of the update {1}'
-                       ).format(adi_step, rel_newZ_norm)
-                print 'sqrd norm of Z: {0}'.format(u_norm_sqrd)
+                       ).format(adi_step, rel_newZ_norm))
+                print('sqrd norm of Z: {0}'.format(u_norm_sqrd))
         except KeyError:
             pass  # no verbosity specified - nothing is shown
 
@@ -224,9 +224,9 @@ def solve_proj_lyap_stein(amat=None, jmat=None, wmat=None, mmat=None,
 
         try:
             if adi_dict['verbose']:
-                print ('Number of ADI steps {0} -- \n' +
+                print(('Number of ADI steps {0} -- \n' +
                        'Relative norm of the update {1}'
-                       ).format(adi_step, rel_newZ_norm)
+                       ).format(adi_step, rel_newZ_norm))
         except KeyError:
             pass  # no verbosity specified - nothing is shown
 
@@ -380,7 +380,7 @@ def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
         nwtn_upd_fnorms.append(upd_fnorm_n)
         try:
             if np.allclose(upd_fnorm_n, upd_fnorm):
-                print 'no more change in the norm of the update... break'
+                print('no more change in the norm of the update... break')
                 break
         except TypeError:
             pass
@@ -391,14 +391,14 @@ def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
 
         try:
             if nwtn_adi_dict['verbose']:
-                print ('Newton ADI step: {1} -- ' +
+                print(('Newton ADI step: {1} -- ' +
                        'rel f norm of update: {0}').format(upd_fnorm,
-                                                           nwtn_stp + 1)
+                                                           nwtn_stp + 1))
                 if not nwtn_adi_dict['full_upd_norm_check']:
-                    print ('btw, we decided whether to compute the actual ' +
-                           'norm on the base of estimates:')
-                    print '|| upd * vec || / || vec || = {0}'.format(vecn2)
-                    print '||Z*vec|| = {0}'.format(vecn3)
+                    print(('btw, we decided whether to compute the actual ' +
+                           'norm on the base of estimates:'))
+                    print('|| upd * vec || / || vec || = {0}'.format(vecn2))
+                    print('||Z*vec|| = {0}'.format(vecn3))
 
         except KeyError:
             pass    # no verbosity specified - nothing is shown
@@ -467,11 +467,11 @@ def compress_Zsvd(Z, k=None, thresh=None, shplot=False, verbose=True):
         Zc = U[:, :k] * S
         # monitor the compression
         vec = np.random.randn(Z.shape[0], 1)
-        print 'dims of Z and Z_rd: ', Z.shape, Zc.shape
-        print '||(ZZ_rd - ZZ )*tstvec|| / ||ZZ_rd*tstvec|| = {0}'.\
+        print('dims of Z and Z_rd: ', Z.shape, Zc.shape)
+        print('||(ZZ_rd - ZZ )*tstvec|| / ||ZZ_rd*tstvec|| = {0}'.\
             format(np.linalg.norm(np.dot(Z, np.dot(Z.T, vec)) -
                    np.dot(Zc, np.dot(Zc.T, vec))) /
-                   np.linalg.norm(np.dot(Z, np.dot(Z.T, vec))))
+                   np.linalg.norm(np.dot(Z, np.dot(Z.T, vec)))))
         return Zc
     else:
         return U[:, :k] * S

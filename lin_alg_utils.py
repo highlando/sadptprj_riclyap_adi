@@ -93,6 +93,9 @@ def solve_sadpnt_smw(amat=None, jmat=None, rhsv=None,
                      jmatT=None, umat=None, vmat=None,
                      rhsp=None, sadlu=None,
                      return_alu=False,
+                     decouplevp=False, solve_A=None,
+                     symmetric=False, posdefinite=False,
+                     cgtol=1e-8,
                      krylov=None, krpslvprms={}, krplsprms={}):
     """solve a saddle point system
 
@@ -138,6 +141,29 @@ def solve_sadpnt_smw(amat=None, jmat=None, rhsv=None,
 
     if rhsp is None:
         rhsp = np.zeros((nnpp, rhsv.shape[1]))
+
+    # TODO --> that's pretty roughly implemented
+    if decouplevp:
+        if not symmetric and posdefinite:
+            raise NotImplementedError('non symmetric not implemented')
+        if solve_A is None:
+            raise NotImplementedError('need a routine that gives `A.-1*rhs`')
+
+        def _invJAinvJTp(p):
+            return jmat*solve_A(jmatT*p)
+
+        iJAiJT = spsla.LinearOperator((nnpp, nnpp), matvec=_invJAinvJTp,
+                                      dtype=np.float32)
+        import krypy
+        prhs = jmat*solve_A(rhsv) - rhsp
+        pls = krypy.linsys.LinearSystem(iJAiJT, prhs,  # M=TODO,
+                                        self_adjoint=True,
+                                        positive_definite=posdefinite)
+        p = krypy.linsys.Cg(pls, tol=cgtol).xk
+        v = solve_A(rhsv - jmatT*p)
+
+        return np.vstack([v, p])
+    # <-- TODO
 
     if sadlu is None:
         sysm1 = sps.hstack([amat, jmatT], format='csr')
@@ -234,7 +260,10 @@ def apply_sqrt_fromright(M, rhsa, output=None):
         the sqrt of the inverse of `M` applied to `rhsa` from the left
 
     """
-    Z = scipy.linalg.cholesky(M.todense())
+    if sps.isspmatrix(M):
+        Z = scipy.linalg.cholesky(M.todense())
+    else:
+        Z = scipy.linalg.cholesky(M)
     # R = Z.T*Z  <-> R^-1 = Z^-1*Z.-T
     if output == 'sparse':
         return sps.csc_matrix(rhsa * Z)
@@ -559,6 +588,10 @@ def comp_uvz_spdns(umat, vmat, zmat, startleft=False):
 
 def mm_dnssps(A, v):
     """compute A*v for sparse or dense A"""
+    try:
+        return A.matvec(v)
+    except AttributeError:
+        pass
     if sps.isspmatrix(A) or sps.isspmatrix(v):
         return A*v
     else:
