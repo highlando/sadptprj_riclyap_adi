@@ -4,9 +4,9 @@ import numpy as np
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsla
 
-import lin_alg_utils as lau
+from . import lin_alg_utils as lau
 
-import proj_ric_utils as pru
+from . import proj_ric_utils as pru
 # unittests for the helper functions
 
 
@@ -36,7 +36,7 @@ class TestProjLyap(unittest.TestCase):
         try:
             self.Mlu = spsla.factorized(self.M.tocsc())
         except RuntimeError:
-            print 'M is not full rank'
+            print('M is not full rank')
 
         # bmatrix that appears in the nonliner ric term X*B*B.T*X
         self.bmat = np.random.randn(self.NV, self.NU)
@@ -63,7 +63,7 @@ class TestProjLyap(unittest.TestCase):
                 break
             except RuntimeError:
                 if self.verbose:
-                    print 'J not full row-rank.. I make another try'
+                    print('J not full row-rank.. I make another try')
         try:
             spsla.splu((self.J * self.J.T).tocsc())
         except RuntimeError:
@@ -181,7 +181,7 @@ class TestProjLyap(unittest.TestCase):
         ProjRes = PitAtXM + PitAtXM.T + np.dot(PitW, PitW.T)
 
         # TEST: check projected residual
-        print np.linalg.norm(ProjRes), np.linalg.norm(MXMt)
+        print(np.linalg.norm(ProjRes), np.linalg.norm(MXMt))
         self.assertTrue(np.linalg.norm(ProjRes) / np.linalg.norm(MXMt)
                         < 1e-8)
 
@@ -353,7 +353,7 @@ class TestProjLyap(unittest.TestCase):
                                     np.dot(self.P.T, np.dot(MtXM, self.P))))
 
 # TEST: check projected residual - riccati sol
-        print np.linalg.norm(ProjRes) / np.linalg.norm(MtXM)
+        print(np.linalg.norm(ProjRes) / np.linalg.norm(MtXM))
 
         self.assertTrue(np.linalg.norm(ProjRes) / np.linalg.norm(MtXM)
                         < 1e-7)
@@ -368,21 +368,21 @@ class TestProjLyap(unittest.TestCase):
 
         Zred = pru.compress_Zsvd(Z, thresh=self.comprthresh)
 
-        print '\ncompressing Z from {0} to {1} columns:'.\
-            format(Z.shape[1], Zred.shape[1])
+        print('\ncompressing Z from {0} to {1} columns:'.
+              format(Z.shape[1], Zred.shape[1]))
 
         difn, zzn, zzrn = \
             lau.comp_sqfnrm_factrd_diff(Z, Zred, ret_sing_norms=True)
 
-        print '\n || ZZ - ZZred||_F || / ||ZZ|| = {0}\n'.\
-            format(np.sqrt(difn/zzn))
+        print('\n || ZZ - ZZred||_F || / ||ZZ|| = {0}\n'.
+              format(np.sqrt(difn/zzn)))
 
         vec = np.random.randn(Z.shape[0], 1)
 
-        print '||(ZZ_red - ZZ )*testvec|| / ||ZZ*testvec|| = {0}'.\
-            format(np.linalg.norm(np.dot(Z, np.dot(Z.T, vec)) -
-                   np.dot(Zred, np.dot(Zred.T, vec))) /
-                   np.linalg.norm(np.dot(Zred, np.dot(Zred.T, vec))))
+        print('||(ZZ_red - ZZ )*testvec|| / ||ZZ*testvec|| = {0}'.
+              format(np.linalg.norm(np.dot(Z, np.dot(Z.T, vec)) -
+                     np.dot(Zred, np.dot(Zred.T, vec))) /
+                     np.linalg.norm(np.dot(Zred, np.dot(Zred.T, vec)))))
 
         self.assertTrue(True)
 
