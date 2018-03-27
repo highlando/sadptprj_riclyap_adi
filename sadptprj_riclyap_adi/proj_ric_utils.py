@@ -267,7 +267,7 @@ def pymess_dae2_cnt_riccati(mmat=None, amat=None, jmat=None,
 
     import pymess
 
-    optns = pymess.options()
+    optns = pymess.Options()
     optns.adi.res2_tol = aditol
     optns.adi.output = 0
     if verbose:
@@ -285,8 +285,8 @@ def pymess_dae2_cnt_riccati(mmat=None, amat=None, jmat=None,
     if mtxoldb is not None:
         optns.nm.K0 = mtxoldb.T  # initial stabilizing feedback
 
-    ricceq = pymess.equation_riccati_dae2(optns, mmat, amat, jmat.T,
-                                          bmat, wmat.T, delta)
+    ricceq = pymess.EquationGRiccatiDAE2(optns, mmat, amat, jmat.T,
+                                         bmat, wmat.T, delta)
 
     Z, status = pymess.lrnm(ricceq, optns)
 
@@ -468,10 +468,10 @@ def compress_Zsvd(Z, k=None, thresh=None, shplot=False, verbose=True):
         # monitor the compression
         vec = np.random.randn(Z.shape[0], 1)
         print('dims of Z and Z_rd: ', Z.shape, Zc.shape)
-        print('||(ZZ_rd - ZZ )*tstvec|| / ||ZZ_rd*tstvec|| = {0}'.\
-            format(np.linalg.norm(np.dot(Z, np.dot(Z.T, vec)) -
-                   np.dot(Zc, np.dot(Zc.T, vec))) /
-                   np.linalg.norm(np.dot(Z, np.dot(Z.T, vec)))))
+        print('||(ZZ_rd - ZZ )*tstvec|| / ||ZZ_rd*tstvec|| = {0}'.
+              format(np.linalg.norm(np.dot(Z, np.dot(Z.T, vec)) -
+                     np.dot(Zc, np.dot(Zc.T, vec))) /
+                     np.linalg.norm(np.dot(Z, np.dot(Z.T, vec)))))
         return Zc
     else:
         return U[:, :k] * S

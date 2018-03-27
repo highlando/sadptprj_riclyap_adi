@@ -101,14 +101,14 @@ class TestProjLyap(unittest.TestCase):
         self.assertTrue(np.linalg.norm(ProjRes) / np.linalg.norm(MtXM)
                         < 1e-8)
 
-    @unittest.skip('lets concentrate on the lyap ')
+    @unittest.skip('lets concentrate on the ric ')
     def test_proj_lyap_sol_pymess(self):
         """check the solution of the projected lyap eqn
 
         via the pymess ADI iteration"""
         import pymess
 
-        optns = pymess.options()
+        optns = pymess.Options()
         optns.adi.res2_tol = 5e-8
         optns.adi.output = 0
         optns.nm.output = 0
@@ -142,7 +142,7 @@ class TestProjLyap(unittest.TestCase):
         self.assertTrue(np.linalg.norm(ProjRes) / np.linalg.norm(MtXM)
                         < 1e-8)
 
-    @unittest.skip('lets concentrate on the lyap ')
+    @unittest.skip('lets concentrate on the ric ')
     def test_proj_lyap_sol_pymess_trnsp(self):
         """check the solution of the transposed projected lyap eqn
 
