@@ -28,7 +28,7 @@ class TestProjLyap(unittest.TestCase):
                                   verbose=self.verbose)
 
         # -F, M spd -- coefficient matrices
-        self.F = -sps.eye(self.NV) + 1e-5*sps.rand(self.NV, self.NV)
+        self.F = -sps.eye(self.NV) + 1e-4*sps.rand(self.NV, self.NV)
         self.M = sps.eye(self.NV, format='csr')
         # self.M = sps.diags([-1, 3, -1], [-1, 0, 1],
         #                    shape=(self.NV, self.NV), format='csr')
