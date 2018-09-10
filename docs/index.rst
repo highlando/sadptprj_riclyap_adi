@@ -10,9 +10,9 @@ This is a Python module for the solution of so called index-2 Differential Ricca
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+  :maxdepth: 2
 
-   code
+  code
 
 
 Indices and tables

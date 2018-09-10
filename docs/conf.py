@@ -39,8 +39,8 @@ extensions = [
     'sphinx.ext.viewcode',
     'numpydoc']
 
-# Sort members by type
-autodoc_member_order = 'groupwise'
+# # Sort members by type
+# autodoc_member_order = 'groupwise'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
