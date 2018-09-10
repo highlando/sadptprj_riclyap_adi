@@ -2,7 +2,7 @@ import numpy as np
 import scipy.linalg as spla
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsla
-from . import lin_alg_utils as lau
+import sadptprj_riclyap_adi.lin_alg_utils as lau
 
 
 __all__ = ['pymess_dae2_cnt_riccati',

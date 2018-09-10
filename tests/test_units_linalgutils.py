@@ -2,7 +2,8 @@ import unittest
 import numpy as np
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsla
-import lin_alg_utils as lau
+
+import sadptprj_riclyap_adi.lin_alg_utils as lau
 
 # unittests for the helper functions
 
@@ -64,7 +65,7 @@ class TestLinalgUtils(unittest.TestCase):
         AAinvZ = self.A * AuvInvZ - np.dot(self.U,
                                            np.dot(self.V, AuvInvZ))
 
-        print np.linalg.norm(AAinvZ - self.Z)
+        print(np.linalg.norm(AAinvZ - self.Z))
 
         self.assertTrue(np.allclose(AAinvZ, self.Z))
 
@@ -150,7 +151,7 @@ class TestLinalgUtils(unittest.TestCase):
         AAinvZ = mata * AuvInvZ - np.dot(umate, np.dot(vmate, AuvInvZ))
 
         # likely to fail because of ill conditioned rand mats
-        print np.linalg.norm(AAinvZ - ze)
+        print(np.linalg.norm(AAinvZ - ze))
         self.assertTrue(np.allclose(AAinvZ, ze),
                         msg='likely to fail because of ill cond')
 
