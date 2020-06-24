@@ -604,6 +604,7 @@ def comp_uvz_spdns(umat, vmat, zmat, startleft=False):
 
 def mm_dnssps(A, v):
     """compute A*v for sparse or dense A"""
+    print('deprecated -- just use the `dot` function')
     try:
         return A.matvec(v)
     except AttributeError:
