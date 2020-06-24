@@ -1,1 +1,5 @@
-Python module to solve all kind of linear equations (+Riccati) related to saddlepoint matrices as the arise, e.g., from the simulation of incompressible flows.
+Saddlepoint Projection Riccati Lyapunov ADI
+---
+
+A Python module to solve linear equations related to saddlepoint matrices as
+they arise, e.g., in the Finite Element discretization of incompressible flows.

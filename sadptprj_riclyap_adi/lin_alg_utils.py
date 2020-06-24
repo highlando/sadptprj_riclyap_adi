@@ -11,8 +11,7 @@ __all__ = ['app_prj_via_sadpnt',
            'app_luinv_to_spmat',
            'comp_sqfnrm_factrd_diff',
            'comp_sqfnrm_factrd_lyap_res',
-           'comp_sqfnrm_factrd_sum',
-           'mm_dnssps']
+           'comp_sqfnrm_factrd_sum']
 
 
 def app_prj_via_sadpnt(amat=None, jmat=None, rhsv=None,
@@ -30,21 +29,21 @@ def app_prj_via_sadpnt(amat=None, jmat=None, rhsv=None,
 
     .. math::
 
-        \mathcal{A}^{-1}\\begin{bmatrix} Pv \\\\ * \end{bmatrix} = \
-        \\begin{bmatrix} Av \\\\ 0 \end{bmatrix},
+        \\mathcal{A}^{-1}\\begin{bmatrix} Pv \\\\ * \\end{bmatrix} = \
+        \\begin{bmatrix} Av \\\\ 0 \\end{bmatrix},
 
     where
 
     .. math::
 
-        \mathcal{A} := \\begin{bmatrix} A & J_1^T \\\\ J_2 & 0 \\end{bmatrix}.
+        \\mathcal{A} := \\begin{bmatrix} A & J_1^T \\\\ J_2 & 0 \\end{bmatrix}.
 
     And :math:`P^Tv` can be obtained via
 
     .. math::
 
-        \mathcal A^{-T}\\begin{bmatrix} A^{-T}P^Tv \\\\ * \end{bmatrix} = \
-        \\begin{bmatrix} v \\\\ 0 \end{bmatrix}.
+        \\mathcal A^{-T}\\begin{bmatrix} A^{-T}P^Tv \\\\ * \\end{bmatrix} = \
+        \\begin{bmatrix} v \\\\ 0 \\end{bmatrix}.
 
     Parameters
     ----------
@@ -104,12 +103,12 @@ def solve_sadpnt_smw(amat=None, jmat=None, rhsv=None,
 
     .. math::
 
-        \\begin{bmatrix} A - UV &  J_1^T  \\\\ 
+        \\begin{bmatrix} A - UV &  J_1^T  \\\\
                          J      &      0
         \\end{bmatrix}
         \\begin{bmatrix} X \\\\ * \\end{bmatrix}
         =
-        \\begin{bmatrix} f_v \\\\ f_p \end{bmatrix}
+        \\begin{bmatrix} f_v \\\\ f_p \\end{bmatrix}
 
     making use of the Sherman-Morrison-Woodbury formula and
 
@@ -443,7 +442,7 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
             if umat is None:
                 return amat*v
             else:
-                return amat*v - mm_dnssps(umat, mm_dnssps(vmat, v))
+                return amat*v - umat.dot(vmat.dot(v))
 
         auvblo = spsla.LinearOperator(amat.shape, matvec=auvb,
                                       dtype='float64')
@@ -488,12 +487,7 @@ def app_smw_inv(amat, umat=None, vmat=None, rhsa=None, Sinv=None,
                     aicrhs = alu(crhs)
                 except TypeError:
                     aicrhs = spsla.spsolve(alu, crhs)
-
-                if sps.isspmatrix(vmat):
-                    crhs = crhs + mm_dnssps(umat, np.dot(Sinv, vmat * aicrhs))
-                else:
-                    crhs = crhs + mm_dnssps(umat,
-                                            np.dot(Sinv, np.dot(vmat, aicrhs)))
+                crhs = crhs + umat.dot(Sinv.dot(vmat.dot(aicrhs)))
 
             try:
                 # auvirhs[:, rhscol] = alu(crhs)
@@ -572,44 +566,3 @@ def comp_sqfnrm_factrd_lyap_res(A, B, C):
         2 * (atb * atb.T).sum(-1).sum() + \
         4 * (btc.T * atc.T).sum(-1).sum() + \
         (ctc * ctc).sum(-1).sum()
-
-
-def comp_uvz_spdns(umat, vmat, zmat, startleft=False):
-    """comp u*[v*z] (default) or [u*v]*z for sparse or dense u or v
-
-    `if startleft` we compute [u*v]*z
-    """
-
-    if startleft:
-        return mm_dnssps(mm_dnssps(umat, vmat), zmat)
-        # if sps.isspmatrix(vmat) or sps.isspmatrix(zmat):
-        #     vz = vmat * zmat
-        # else:
-        #     vz = np.dot(vmat, zmat)
-        # if sps.isspmatrix(umat):
-        #     return umat * vz
-        # else:
-        #     return np.dot(umat, vz)
-    else:
-        return mm_dnssps(umat, mm_dnssps(vmat, zmat))
-        # if sps.isspmatrix(umat) or sps.isspmatrix(vmat):
-        #     uv = umat * vmat
-        # else:
-        #     uv = np.dot(umat, vmat)
-        # if sps.isspmatrix(zmat):
-        #     return uv * zmat
-        # else:
-        #     return np.dot(umat, vz)
-
-
-def mm_dnssps(A, v):
-    """compute A*v for sparse or dense A"""
-    print('deprecated -- just use the `dot` function')
-    try:
-        return A.matvec(v)
-    except AttributeError:
-        pass
-    if sps.isspmatrix(A) or sps.isspmatrix(v):
-        return A*v
-    else:
-        return np.dot(A, v)

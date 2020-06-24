@@ -101,7 +101,7 @@ class TestProjLyap(unittest.TestCase):
         self.assertTrue(np.linalg.norm(ProjRes) / np.linalg.norm(MtXM)
                         < 1e-8)
 
-    @unittest.skip('lets concentrate on the ric ')
+    @unittest.skip('no pymess')
     def test_proj_lyap_sol_pymess(self):
         """check the solution of the projected lyap eqn
 
@@ -142,7 +142,7 @@ class TestProjLyap(unittest.TestCase):
         self.assertTrue(np.linalg.norm(ProjRes) / np.linalg.norm(MtXM)
                         < 1e-8)
 
-    @unittest.skip('lets concentrate on the ric ')
+    @unittest.skip('no pymess')
     def test_proj_lyap_sol_pymess_trnsp(self):
         """check the solution of the transposed projected lyap eqn
 
@@ -247,7 +247,7 @@ class TestProjLyap(unittest.TestCase):
         self.assertTrue(np.allclose(Z3, Z4))
         self.assertTrue(np.allclose(Z, Z4))
 
-    @unittest.skip('lets concentrate on the lyap ')
+    @unittest.skip('no pymess')
     def test_proj_alg_ric_sol_pymess(self):
         """check the sol of the projected alg. Riccati Eqn
 
@@ -309,6 +309,7 @@ class TestProjLyap(unittest.TestCase):
         self.assertTrue(np.allclose(MtXM,
                                     np.dot(self.P.T, np.dot(MtXM, self.P))))
 
+    @unittest.skip('no pymess')
     def test_proj_alg_ric_myvspy_mess(self):
         """check the sol of the projected alg. Riccati Eqn
 
@@ -384,6 +385,7 @@ class TestProjLyap(unittest.TestCase):
                      np.linalg.norm(np.dot(Zred, np.dot(Zred.T, vec)))))
 
         self.assertTrue(True)
+
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestProjLyap)
 unittest.TextTestRunner(verbosity=2).run(suite)

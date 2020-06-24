@@ -340,7 +340,7 @@ def proj_alg_ric_newtonadi(mmat=None, amat=None, jmat=None,
             rhsadi = wmat
             mtxbt = None
         else:
-            mtxb = mt * np.dot(znc, lau.mm_dnssps(znc.T, bmat))
+            mtxb = mt.dot(znc.dot(znc.T.dot(bmat)))
             mtxbt = mtxb.T
             rhsadi = np.hstack([mtxb, wmat])
         # to avoid a dense matrix we use the smw formula

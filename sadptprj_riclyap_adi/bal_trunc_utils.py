@@ -167,11 +167,11 @@ def compare_stepresp(tmesh=None, a_mat=None, c_mat=None, b_mat=None,
     from scipy.integrate import odeint
 
     ahat = np.dot(tl.T, a_mat*tr)
-    chat = lau.mm_dnssps(c_mat, tr)
+    chat = c_mat.dot(tr)
 
     inivhat = np.dot(tl.T, m_mat*iniv)
 
-    inivout = lau.mm_dnssps(c_mat, iniv).tolist()
+    inivout = (c_mat.dot(iniv)).tolist()
 
     red_stp_rsp, ful_stp_rsp = [], []
     for ccol in [0]:  # , b_mat.shape[1]-1]:  # range(2):  # b_mat.shape[1]):

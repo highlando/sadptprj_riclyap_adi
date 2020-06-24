@@ -189,7 +189,7 @@ class TestLinalgUtils(unittest.TestCase):
                                        jmatT=self.Jt, umat=self.U, vmat=self.V)
 
         auvAUVinv = self.A * AuvInvZ[:n, :] - \
-            lau.comp_uvz_spdns(self.U, self.V, AuvInvZ[:n, :])
+            self.U.dot(self.V.dot(AuvInvZ[:n, :]))
 
         AuvInv2Z = lau.solve_sadpnt_smw(amat=self.A, jmat=self.J,
                                         rhsv=auvAUVinv,
@@ -248,14 +248,6 @@ class TestLinalgUtils(unittest.TestCase):
         self.assertTrue(np.allclose(frob_zmu * frob_zmu, my_frob_zmu))
         self.assertTrue(np.allclose(norm_u, frob_u ** 2))
         self.assertTrue(np.allclose(norm_z, frob_z ** 2))
-
-    def test_spsdns_multiplication(self):
-        """check the sparse/dense multiplication helpers"""
-        uvsl = lau.comp_uvz_spdns(self.U, self.Vsp, self.Z)
-        uvsr = lau.comp_uvz_spdns(self.U, self.Vsp, self.Z, startleft=True)
-        uvs = np.dot(self.U*self.Vsp, self.Z)
-        self.assertTrue(np.allclose(uvsl, uvsr))
-        self.assertTrue(np.allclose(uvsl, uvs))
 
 # suite = unittest.TestLoader().loadTestsFromTestCase(TestLinalgUtils)
 # unittest.TextTestRunner(verbosity=2).run(suite)
