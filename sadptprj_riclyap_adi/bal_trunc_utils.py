@@ -26,9 +26,9 @@ def compute_lrbt_transfos(zfc=None, zfo=None, mmat=None,
 
     """
     if mmat is None:
-        mmat = sps.eye(zfo.shape[0])
-
-    lsv_mat, sv, rsv_matt = np.linalg.svd(np.dot(zfc.T, mmat*zfo))
+        lsv_mat, sv, rsv_matt = np.linalg.svd(np.dot(zfc.T, zfo))
+    else:
+        lsv_mat, sv, rsv_matt = np.linalg.svd(np.dot(zfc.T, mmat.dot(zfo)))
 
     k = np.where(sv > trunck['threshh'])[0].size
     lsvk, rsvk, svk = lsv_mat[:, :k], rsv_matt.T[:, :k], sv[:k]
