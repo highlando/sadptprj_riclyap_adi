@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import sadptprj_riclyap_adi.lin_alg_utils as lau
-import dolfin_navier_scipy.data_output_utils as dou
 
 
 def compute_lrbt_transfos(zfc=None, zfo=None, mmat=None,
@@ -90,11 +89,12 @@ def compare_freqresp(mmat=None, amat=None, jmat=None, bmat=None,
         # print red_freqrel[-1]
 
     if datastr is not None:
-        dou.save_output_json(dict(tmesh=absci.tolist(),
-                                  fullsysfr=freqrel,
-                                  redsysfr=red_freqrel,
-                                  diffsysfr=diff_freqrel),
-                             fstring=datastr + 'forfreqrespplot')
+        raise DeprecationWarning()
+        # dou.save_output_json(dict(tmesh=absci.tolist(),
+        #                           fullsysfr=freqrel,
+        #                           redsysfr=red_freqrel,
+        #                           diffsysfr=diff_freqrel),
+        #                      fstring=datastr + 'forfreqrespplot')
 
     if plot:
         legstr = ['NV was {0}'.format(mmat.shape[0]),
@@ -187,17 +187,18 @@ def compare_stepresp(tmesh=None, a_mat=None, c_mat=None, b_mat=None,
                            cmat=c_mat, soldict=fsr_soldict))
 
     if jsonstr:
-        try:
-            tmesh = tmesh.tolist()
-        except AttributeError:
-            pass  # is a list already
-        dou.save_output_json(datadict={"tmesh": tmesh,
-                                       "ful_stp_rsp": ful_stp_rsp,
-                                       "red_stp_rsp": red_stp_rsp,
-                                       "inivout": inivout},
-                             fstring=jsonstr,
-                             module='sadptprj_riclyap_adi.bal_trunc_utils',
-                             plotroutine='plot_step_resp')
+        raise DeprecationWarning()
+        # try:
+        #     tmesh = tmesh.tolist()
+        # except AttributeError:
+        #     pass  # is a list already
+        # dou.save_output_json(datadict={"tmesh": tmesh,
+        #                                "ful_stp_rsp": ful_stp_rsp,
+        #                                "red_stp_rsp": red_stp_rsp,
+        #                                "inivout": inivout},
+        #                      fstring=jsonstr,
+        #                      module='sadptprj_riclyap_adi.bal_trunc_utils',
+        #                      plotroutine='plot_step_resp')
 
     if plot:
         plot_step_resp(tmesh=tmesh, red_stp_rsp=red_stp_rsp,
@@ -214,11 +215,12 @@ def plot_step_resp(str_to_json=None, tmesh=None,
     from matplotlib2tikz import save as tikz_save
 
     if str_to_json is not None:
-        jsdict = dou.load_json_dicts(str_to_json)
-        tmesh = np.array(jsdict['tmesh'])
-        red_stp_rsp = jsdict['red_stp_rsp']
-        ful_stp_rsp = jsdict['ful_stp_rsp']
-        inivout = jsdict['inivout']
+        raise DeprecationWarning()
+        # jsdict = dou.load_json_dicts(str_to_json)
+        # tmesh = np.array(jsdict['tmesh'])
+        # red_stp_rsp = jsdict['red_stp_rsp']
+        # ful_stp_rsp = jsdict['ful_stp_rsp']
+        # inivout = jsdict['inivout']
     else:
         str_to_json = 'notspecified'
 
