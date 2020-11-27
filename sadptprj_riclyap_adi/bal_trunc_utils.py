@@ -24,10 +24,18 @@ def compute_lrbt_transfos(zfc=None, zfo=None, mmat=None,
         for the balanced truncation
 
     """
-    if mmat is None:
-        lsv_mat, sv, rsv_matt = np.linalg.svd(np.dot(zfc.T, zfo))
-    else:
-        lsv_mat, sv, rsv_matt = np.linalg.svd(np.dot(zfc.T, mmat.dot(zfo)))
+
+    try:
+        from scipy.linalg.lapack import dgejsv
+        if mmat is None:
+            lsv_mat, sv, rsv_matt, _, _, _ = dgejsv(np.dot(zfc.T, zfo))
+        else:
+            lsv_mat, sv, rsv_matt, _, _, _ = dgejsv(zfc.T.dot(mmat.dot(zfo)))
+    except ImportError:
+        if mmat is None:
+            lsv_mat, sv, rsv_matt = np.linalg.svd(np.dot(zfc.T, zfo))
+        else:
+            lsv_mat, sv, rsv_matt = np.linalg.svd(np.dot(zfc.T, mmat.dot(zfo)))
 
     k = np.where(sv > trunck['threshh'])[0].size
     lsvk, rsvk, svk = lsv_mat[:, :k], rsv_matt.T[:, :k], sv[:k]

@@ -448,7 +448,11 @@ def compress_Zsvd(Z, k=None, thresh=None, shplot=False, verbose=True):
     such that it ZZ.T is still well approximated"""
 
     nny = Z.shape[1]
-    U, s, V = np.linalg.svd(Z, full_matrices=False)
+    try:
+        from scipy.linalg.lapack import dgejsv
+        U, s, V, _, _, _ = dgejsv(np.dot(Z))
+    except ImportError:
+        U, s, V = np.linalg.svd(Z, full_matrices=False)
 
     if shplot:
         import matplotlib.pyplot as plt

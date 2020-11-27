@@ -211,25 +211,30 @@ class TestProjLyap(unittest.TestCase):
                                        nwtn_adi_dict=self.
                                        nwtn_adi_dict)['zfac']
 
+        Z = Z[:, :self.NV-1]  # cut the Z
         Zred = pru.compress_Zsvd(Z, thresh=self.comprthresh)
 
-        print('\ncompressing Z from {0} to {1} columns:'.\
-            format(Z.shape[1], Zred.shape[1]))
+        print('\ncompressing Z from {0} to {1} columns:'.
+              format(Z.shape[1], Zred.shape[1]))
 
         difn, zzn, zzrn = \
             lau.comp_sqfnrm_factrd_diff(Z, Zred, ret_sing_norms=True)
 
-        print('\n || ZZ - ZZred||_F || / ||ZZ|| = {0}\n'.\
-            format(np.sqrt(difn/zzn)))
+        fnormrelerr = np.sqrt(np.abs(difn)/zzn)
+        print('difn, zzn, sqrtzzn', difn, zzn, np.sqrt(zzn))
+        print('\n || ZZ - ZZred||_F || / ||ZZ|| = {0}\n'.
+              format(fnormrelerr))
 
         vec = np.random.randn(Z.shape[0], 1)
+        estmtrelerr = np.linalg.norm(np.dot(Z, np.dot(Z.T, vec)) -
+                                     np.dot(Zred, np.dot(Zred.T, vec))) /\
+            np.linalg.norm(np.dot(Zred, np.dot(Zred.T, vec)))
 
-        print('||(ZZ_red - ZZ )*testvec|| / ||ZZ*testvec|| = {0}'.\
-            format(np.linalg.norm(np.dot(Z, np.dot(Z.T, vec)) -
-                   np.dot(Zred, np.dot(Zred.T, vec))) /
-                   np.linalg.norm(np.dot(Zred, np.dot(Zred.T, vec)))))
+        print('||(ZZ_red - ZZ )*testvec|| / ||ZZ*testvec|| = {0}'.
+              format(estmtrelerr))
+        self.assertTrue(fnormrelerr < self.comprthresh)
+        self.assertTrue(estmtrelerr < self.comprthresh)
 
-        self.assertTrue(True)
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestProjLyap)
 unittest.TextTestRunner(verbosity=2).run(suite)
