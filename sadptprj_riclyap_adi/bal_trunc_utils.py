@@ -1,7 +1,5 @@
 import scipy.sparse as sps
 import numpy as np
-import matplotlib.pyplot as plt
-
 import sadptprj_riclyap_adi.lin_alg_utils as lau
 
 
@@ -106,6 +104,7 @@ def compare_freqresp(mmat=None, amat=None, jmat=None, bmat=None,
         #                      fstring=datastr + 'forfreqrespplot')
 
     if plot:
+        import matplotlib.pyplot as plt
         legstr = ['NV was {0}'.format(mmat.shape[0]),
                   'nv is {0}'.format(tr.shape[1]),
                   'difference']
@@ -221,6 +220,8 @@ def plot_step_resp(str_to_json=None, tmesh=None,
     compress : real, optional
         factor of compressing for plot, defaults to 20
     """
+
+    import matplotlib.pyplot as plt
     from matplotlib2tikz import save as tikz_save
 
     if str_to_json is not None:
