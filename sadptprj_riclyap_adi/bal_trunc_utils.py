@@ -25,7 +25,6 @@ def compute_lrbt_transfos(zfc=None, zfo=None, mmat=None,
 
     zfctmzfo = zfc.T.dot(mmat.dot(zfo))
     try:
-        raise ImportError()
         from scipy.linalg.lapack import dgejsv
         if mmat is None:
             sv, lsv_mat, rsv_mat, _, _, _ = dgejsv(np.dot(zfc.T, zfo))
@@ -52,6 +51,7 @@ def compute_lrbt_transfos(zfc=None, zfo=None, mmat=None,
 
     k = np.where(sv > trunck['threshh'])[0].size
     lsvk, rsvk, svk = lsv_mat[:, :k], rsv_mat[:k, :], sv[:k]
+
     # ## DEBUG
     # diamatk = sps.dia_matrix((svk, np.array([0])), shape=(k, k))
     # diamat = sps.dia_matrix((sv, np.array([0])), shape=(sv.size, sv.size))
