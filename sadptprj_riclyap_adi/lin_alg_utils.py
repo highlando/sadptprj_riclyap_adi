@@ -566,3 +566,31 @@ def comp_sqfnrm_factrd_lyap_res(A, B, C):
         2 * (atb * atb.T).sum(-1).sum() + \
         4 * (btc.T * atc.T).sum(-1).sum() + \
         (ctc * ctc).sum(-1).sum()
+
+
+def comp_sqfnrm_factrd_riccati_res(M=None, A=None, B=None, C=None, Z=None):
+    """compute the squared Frobenius norm of
+
+    A.T*Z*Z^T*M + M.T*Z*Z^T*A - M.T*Z*Z^T*B*B.T*Z*Z.T*M + C.T*C
+
+    =
+
+    (A.T-.5*M.T*Z*Z^T*B*B.T)*Z*Z^T*M + M.T*Z*Z^T*(A-.5*B*B.T*Z*Z.T*M) + C.T*C
+
+    =:
+
+    Y.T*X + X.T*Y + C.T*C
+
+    via the `comp_sqfnrm_factrd_lyap_res(X, Y, C.T)`
+
+    """
+
+    if M is None:
+        Y = Z
+    else:
+        Y = M @ Z
+
+    btz = B.T @ Z
+    X = A.T @ Z - .5 * (Y @ btz.T) @ btz
+
+    return comp_sqfnrm_factrd_lyap_res(X, Y, C.T)

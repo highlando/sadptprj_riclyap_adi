@@ -23,28 +23,48 @@ def compute_lrbt_transfos(zfc=None, zfo=None, mmat=None,
 
     """
 
+    zfctmzfo = zfc.T.dot(mmat.dot(zfo))
     try:
+        raise ImportError()
         from scipy.linalg.lapack import dgejsv
         if mmat is None:
             sv, lsv_mat, rsv_mat, _, _, _ = dgejsv(np.dot(zfc.T, zfo))
         else:
-            sv, lsv_mat, rsv_mat, _, _, _ = dgejsv(zfc.T.dot(mmat.dot(zfo)))
-        rsv_matt = rsv_mat.T
+            if zfctmzfo.shape[0] >= zfctmzfo.shape[1]:
+                sv, lsv_mat, rsv_matt, _, _, _ = dgejsv(zfctmzfo)
+                rsv_mat = rsv_matt.T
+            else:
+                zfctmzfot = zfctmzfo.T.copy()
+                sv, rsv_matt, lsv_matt, _, _, _ = dgejsv(zfctmzfot)
+                rsv_mat = rsv_matt.T
+                lsv_mat = lsv_matt
+                print('needed to do a transpose to use dgejsv')
         print('used LAPACKs `scipy.linalg.lapack.dgejsv` for the SVD')
     except ImportError:
         if mmat is None:
-            lsv_mat, sv, rsv_matt = np.linalg.svd(np.dot(zfc.T, zfo))
+            lsv_mat, sv, rsv_mat = np.linalg.svd(np.dot(zfc.T, zfo),
+                                                 full_matrices=False)
         else:
-            lsv_mat, sv, rsv_matt = np.linalg.svd(np.dot(zfc.T, mmat.dot(zfo)))
+            lsv_mat, sv, rsv_mat = np.linalg.svd(np.dot(zfc.T, mmat.dot(zfo)),
+                                                 full_matrices=False)
+        # rsv_mat = rsv_matt.T
         print('used `numpy.linalg.svd` for the SVD')
 
     k = np.where(sv > trunck['threshh'])[0].size
-    lsvk, rsvk, svk = lsv_mat[:, :k], rsv_matt.T[:, :k], sv[:k]
+    lsvk, rsvk, svk = lsv_mat[:, :k], rsv_mat[:k, :], sv[:k]
+    # ## DEBUG
+    # diamatk = sps.dia_matrix((svk, np.array([0])), shape=(k, k))
+    # diamat = sps.dia_matrix((sv, np.array([0])), shape=(sv.size, sv.size))
+    # print(lsv_mat.shape, diamat.shape, rsv_mat.shape)
+    # print(np.linalg.norm(zfctmzfo - lsv_mat.dot(diamat.dot(rsv_mat))))
+    # print(lsvk.shape, diamatk.shape, rsvk.shape)
+    # print(np.linalg.norm(zfctmzfo - lsvk.dot(diamatk.dot(rsvk))))
+
     svsqri = 1./np.sqrt(svk)
     svsqri_mat = sps.dia_matrix((svsqri, np.array([0])), shape=(k, k))
 
     tl = np.dot(zfc, lsvk*svsqri_mat)
-    tr = np.dot(zfo, rsvk*svsqri_mat)
+    tr = np.dot(zfo, rsvk.T*svsqri_mat)
 
     return tl, tr, sv
 
