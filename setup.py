@@ -4,7 +4,7 @@ with open("README.md", 'r') as f:
     long_description = f.read()
 
 setuptools.setup(name='sadptprj_riclyap_adi',
-                 version='1.0.2',
+                 version='1.0.3',
                  description='Solve saddle-point problems as they occur' +
                  ' in simulations, model reduction, and optimal control' +
                  ' of incompressible flows.',
