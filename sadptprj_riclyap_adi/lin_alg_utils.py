@@ -1,9 +1,12 @@
+import logging
+
 import numpy as np
 import scipy
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsla
 
 __all__ = ['app_prj_via_sadpnt',
+           'SpslaKrylovCounter',
            'solve_sadpnt_smw',
            'apply_sqrt_fromright',
            'apply_invsqrt_fromright',
@@ -12,6 +15,25 @@ __all__ = ['app_prj_via_sadpnt',
            'comp_sqfnrm_factrd_diff',
            'comp_sqfnrm_factrd_lyap_res',
            'comp_sqfnrm_factrd_sum']
+
+
+class SpslaKrylovCounter(object):
+    def __init__(self, disp=True, A=None, b=None, logmod=1000):
+        self.disp = disp
+        self.niter = 0
+        self.callbacks = []
+        self.A = A
+        self.b = b
+        self.logmod = logmod
+
+    def __call__(self, xk=None):
+
+        rk = np.linalg.norm(self.A@xk - self.b)
+        self.callbacks.append(rk)
+        self.niter += 1
+        # logging.info(f'it: {self.niter}, res: {rk:.5e}')
+        if np.mod(self.niter, self.logmod) == 0 and self.disp:
+            print(f'it: {self.niter}, res: {rk:.5e}')
 
 
 def app_prj_via_sadpnt(amat=None, jmat=None, rhsv=None,
@@ -98,7 +120,6 @@ def solve_sadpnt_smw(amat=None, jmat=None, rhsv=None,
                      symmetric=False, posdefinite=False,
                      cgtol=1e-8,
                      krylov=None, krpslvprms={}, krplsprms={}):
-
     """solve a saddle point system
 
     .. math::
@@ -169,21 +190,40 @@ def solve_sadpnt_smw(amat=None, jmat=None, rhsv=None,
 
         iJAiJT = spsla.LinearOperator((nnpp, nnpp), matvec=_invJAinvJTp,
                                       dtype=np.float32)
-        import krypy
         prhs = jmat*solve_A(rhsv) - rhsp
-        pls = krypy.linsys.LinearSystem(iJAiJT, prhs,  # M=TODO,
-                                        self_adjoint=True,
-                                        positive_definite=posdefinite)
-        p = krypy.linsys.Cg(pls, tol=cgtol).xk
+
+        # ## KRYPY
+        # import krypy
+        # pls = krypy.linsys.LinearSystem(iJAiJT, prhs,  # M=TODO,
+        #                                 self_adjoint=True,
+        #                                 positive_definite=posdefinite)
+        # p = krypy.linsys.Cg(pls, tol=cgtol).xk
+        # v = solve_A(rhsv - jmatT*p)
+        # ## end KRYPY
+
+        maxiter = 2000
+        opts = dict(maxiter=maxiter)
+        _pcres = SpslaKrylovCounter(A=iJAiJT, b=prhs)
+
+        logging.info('solving for p with CG')
+        p, exitcode = spsla.cg(iJAiJT, prhs,  # x0=initval,
+                               # M=_Ml,
+                               rtol=1e-12,
+                               # atol=1e-12,
+                               callback=_pcres,
+                               **opts)
+
+        p = p.reshape((-1, 1))
         v = solve_A(rhsv - jmatT*p)
 
         return np.vstack([v, p])
+
     # <-- TODO
 
     if sadlu is None:
-        sysm1 = sps.hstack([amat, jmatT], format='csr')
-        sysm2 = sps.hstack([jmat, sps.csr_matrix((nnpp, nnpp))], format='csr')
-        mata = sps.vstack([sysm1, sysm2], format='csr')
+        sysm1 = sps.hstack([amat, jmatT], format='csc')
+        sysm2 = sps.hstack([jmat, sps.csr_matrix((nnpp, nnpp))], format='csc')
+        mata = sps.vstack([sysm1, sysm2], format='csc')
     else:
         mata = sadlu
 
