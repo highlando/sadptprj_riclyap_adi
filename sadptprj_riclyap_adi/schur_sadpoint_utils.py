@@ -30,30 +30,33 @@ def get_sinv(Sfac):
 
 
 def schur_comp_inv(f, minv=None, B=None, infoS=None, C=None,
-                   S=None, M=None, sinv=None):
+                   S=None, M=None, sinv=None, ret_invs=False):
     nnvv, nnpp = B.shape
-    if sinv is None and S is not None:
-        Sfac = cholesky(np.array(S).reshape((nnpp, nnpp)))
-        sinv = get_sinv(Sfac)
-    else:
-        try:
-            S = np.load(f'{infoS}_nvnp{nnvv}{nnpp}_S.npy')
-            logger.info(f'loaded: {infoS}_nvnp{nnvv}{nnpp}_S.npy')
+    if sinv is None:
+        if S is None:
+            try:
+                S = np.load(f'{infoS}_nvnp{nnvv}{nnpp}_S.npy')
+                logger.info(f'loaded: {infoS}_nvnp{nnvv}{nnpp}_S.npy')
+                Sfac = cholesky(np.array(S).reshape((nnpp, nnpp)))
+                sinv = get_sinv(Sfac)
+            except FileNotFoundError:
+                logger.info(f'not found: {infoS}_nvnp{nnvv}{nnpp}_S.npy')
+                save_npz(f'{infoS}_nvnp{nnvv}{nnpp}_M.npz', M)
+                save_npz(f'{infoS}_nvnp{nnvv}{nnpp}_B.npz', B)
+                print('from scipy.sparse import load_npz')
+                print(f'M = load_npz("{infoS}_nvnp{nnvv}{nnpp}_M.npz")')
+                print(f'B = load_npz("{infoS}_nvnp{nnvv}{nnpp}_B.npz")')
+                print(f'save_npz("{infoS}_nvnp{nnvv}{nnpp}_S.npz")\n\n')
+                print(f'mkdir {infoS}_nvnp{nnvv}{nnpp}_cachedir/')
+                print(f'python compute_S_cline.py {infoS}_nvnp{nnvv}{nnpp} ' +
+                      '0 1 2 3 --nstrips 4')
+                raise UserWarning('no S -- exported the mats' +
+                                  'see above for instructions')
+        else:
             Sfac = cholesky(np.array(S).reshape((nnpp, nnpp)))
             sinv = get_sinv(Sfac)
-        except FileNotFoundError:
-            logger.info(f'not found: {infoS}_nvnp{nnvv}{nnpp}_S.npy')
-            save_npz(f'{infoS}_nvnp{nnvv}{nnpp}_M.npz', M)
-            save_npz(f'{infoS}_nvnp{nnvv}{nnpp}_B.npz', B)
-            print('from scipy.sparse import load_npz')
-            print(f'M = load_npz("{infoS}_nvnp{nnvv}{nnpp}_M.npz")')
-            print(f'B = load_npz("{infoS}_nvnp{nnvv}{nnpp}_B.npz")')
-            print(f'save_npz("{infoS}_nvnp{nnvv}{nnpp}_S.npz")\n\n')
-            print(f'mkdir {infoS}_nvnp{nnvv}{nnpp}_cachedir/')
-            print(f'python compute_S_cline.py {infoS}_nvnp{nnvv}{nnpp} ' +
-                  '0 1 2 3 --nstrips 4')
-            raise UserWarning('don"t have the S -- wrote out the mats for it' +
-                              '\nsee above for instructions')
+    else:  # sinv already available
+        pass
     if minv is None:
         # minv = factorized(M)
         mfac = skscholesky(M)
@@ -69,7 +72,10 @@ def schur_comp_inv(f, minv=None, B=None, infoS=None, C=None,
     fot = f[_nv:] - C@fto
     ftt = -sinv(fot)
     fto = fto - minv(B @ ftt)
-    return np.r_[fto, ftt], sinv
+    if ret_invs:
+        return np.r_[fto, ftt], sinv, minv
+    else:
+        return np.r_[fto, ftt]
 
 
 def comp_S(M=None, B=None, minv=None, wstrips=None, nstrips=None,
