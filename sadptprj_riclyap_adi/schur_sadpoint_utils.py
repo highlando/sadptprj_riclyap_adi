@@ -11,12 +11,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def cmp_S_col_two_rl(Ainvcbcol, C, k, nnpp):
+def cmp_S_col_two_rl(Ainvcbcol, C, k, nnpp, writeX=False):
     # Ainvcbcol = Ainv(B[:, k].toarray().flatten())
     vallist = []
     for j in range(k, nnpp):
-        if (np.mod(j+1, int(nnpp/10)) == 0
-                and np.mod(k, int(nnpp/10)) == 0):
+        if (np.mod(j+1, int(nnpp/10)) == 0 and writeX):
+            # and np.mod(k, int(nnpp/10)) == 0):
             print('X ', sep=' ', end='', flush=True)
         csval = np.inner(C[j, :].toarray().flatten(), Ainvcbcol)
         vallist.append(csval.item())
@@ -106,12 +106,16 @@ def comp_S(M=None, B=None, minv=None, wstrips=None, nstrips=None,
             try:
                 v = np.load(sstrpfnm)
             except FileNotFoundError:
+                opplz = False
                 for i in range(nstrips):  # only for the output
                     if np.mod(k+i, int(nnpp/10)) == 0:
-                        print(f'\nt: {time.time()-strttm:6.0f}: ', sep=' ',
-                              end='', flush=True)
+                        print(f'\nS{s:3.0f}/{nstrips}: ' +
+                              f't: {time.time()-strttm:6.0f}: ',
+                              sep=' ', end='', flush=True)
+                        opplz = True
                 Ainvcbcol = mlu(B[:, k].toarray().flatten())
-                _, v = cmp_S_col_two_rl(Ainvcbcol, B.T, k, nnpp)
+                _, v = cmp_S_col_two_rl(Ainvcbcol, B.T, k, nnpp,
+                                        writeX=opplz)
                 np.save(sstrpfnm, v)
             if not cacheonly:
                 for j in range(k, nnpp):
