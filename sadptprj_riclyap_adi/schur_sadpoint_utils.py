@@ -3,9 +3,9 @@ import time
 import numpy as np
 from scipy.linalg import cholesky, cho_solve
 from scipy.sparse import save_npz  # , load_npz
-# from scipy.sparse.linalg import factorized
+from scipy.sparse.linalg import factorized
 
-from sksparse.cholmod import cholesky as skscholesky
+# from sksparse.cholmod import cholesky as skscholesky
 
 import logging
 logger = logging.getLogger(__name__)
@@ -58,9 +58,9 @@ def schur_comp_inv(f, minv=None, B=None, infoS=None, C=None,
     else:  # sinv already available
         pass
     if minv is None:
-        # minv = factorized(M)
-        mfac = skscholesky(M)
-        minv = mfac.solve_A
+        minv = factorized(M)
+        # mfac = skscholesky(M)
+        # minv = mfac.solve_A
 
     if C is None:
         C = B.T
@@ -84,13 +84,13 @@ def comp_S(M=None, B=None, minv=None, wstrips=None, nstrips=None,
         wstrips = range(nstrips)
 
     if minv is None:
-        # logging.info('factorizing M with factorized... ')
-        # mlu = factorized(M)
-        # logging.info('done factorizing M. ')
-        logging.info('factorizing M with cholmod')
-        facsm = skscholesky(M)
-        logging.info('done: with factorization of A')
-        mlu = facsm.solve_A
+        logging.info('factorizing M with factorized... ')
+        mlu = factorized(M)
+        logging.info('done factorizing M. ')
+        # logging.info('factorizing M with cholmod')
+        # facsm = skscholesky(M)
+        # logging.info('done: with factorization of A')
+        # mlu = facsm.solve_A
     else:
         mlu = minv
 
