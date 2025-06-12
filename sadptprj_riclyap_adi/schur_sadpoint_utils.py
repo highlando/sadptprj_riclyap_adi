@@ -50,8 +50,8 @@ def schur_comp_inv(f, minv=None, B=None, infoS=None, C=None,
                 print(f'mkdir {infoS}_nvnp{nnvv}{nnpp}_cachedir/')
                 print(f'python compute_S_cline.py {infoS}_nvnp{nnvv}{nnpp} ' +
                       '0 1 2 3 --nstrips 4')
-                raise UserWarning('no S -- exported the mats' +
-                                  'see above for instructions')
+                raise RuntimeError('no S -- exported the mats' +
+                                   'see above for instructions')
         else:
             Sfac = cholesky(np.array(S).reshape((nnpp, nnpp)))
             sinv = get_sinv(Sfac)
